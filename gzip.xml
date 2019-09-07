@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<assembly
+        xmlns="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.3"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.3 http://maven.apache.org/xsd/assembly-1.1.3.xsd">
+    <id>package-gzip</id>
+    <formats>
+        <format>tar.gz</format>
+    </formats>
+    <!-- 改为false不会出现两层相同的目录 -->
+    <includeBaseDirectory>true</includeBaseDirectory>
+    <fileSets>
+        <!-- target下*.jar打包在tar.gz的根目录 -->
+        <fileSet>
+            <directory>${basedir}/kafka-clients/target</directory>
+            <outputDirectory>/libs</outputDirectory>
+            <includes>
+                <include>*.jar</include>
+            </includes>
+            <excludes>
+                <exclude>*-tests.jar</exclude>
+            </excludes>
+        </fileSet>
+        <fileSet>
+            <directory>${basedir}/kafka-core/target</directory>
+            <outputDirectory>/libs</outputDirectory>
+            <includes>
+                <include>*.jar</include>
+            </includes>
+            <excludes>
+                <exclude>*-tests.jar</exclude>
+            </excludes>
+        </fileSet>
+        <fileSet>
+            <directory>${basedir}/kafka-log4j-appender/target</directory>
+            <outputDirectory>/libs</outputDirectory>
+            <includes>
+                <include>*.jar</include>
+            </includes>
+            <excludes>
+                <exclude>*-tests.jar</exclude>
+            </excludes>
+        </fileSet>
+        <fileSet>
+            <directory>${basedir}/kafka-tools/target</directory>
+            <outputDirectory>/libs</outputDirectory>
+            <includes>
+                <include>*.jar</include>
+            </includes>
+            <excludes>
+                <exclude>*-tests.jar</exclude>
+            </excludes>
+        </fileSet>
+        <fileSet>
+            <directory>${basedir}/resources</directory>
+            <outputDirectory>/</outputDirectory>
+        </fileSet>
+    </fileSets>
+    <dependencySets>
+        <dependencySet>
+            <outputDirectory>libs</outputDirectory>
+            <scope>runtime</scope>
+            <excludes>
+                <!--<exclude>${project.name}-${project.version}</exclude> -->
+                <exclude>${groupId}:${artifactId}</exclude>
+            </excludes>
+        </dependencySet>
+    </dependencySets>
+</assembly>
