@@ -16,6 +16,12 @@
             <groupId>org.apache.kafka</groupId>
             <artifactId>kafka-clients</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.scalatest</groupId>
+            <artifactId>scalatest-junit_2.11</artifactId>
+            <version>3.0.0-SNAP13</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>
