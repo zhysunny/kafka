@@ -30,6 +30,7 @@ public class DefaultAuthenticator implements Authenticator {
     private PrincipalBuilder principalBuilder;
     private Principal principal;
 
+    @Override
     public void configure(TransportLayer transportLayer, PrincipalBuilder principalBuilder, Map<String, ?> configs) {
         this.transportLayer = transportLayer;
         this.principalBuilder = principalBuilder;
@@ -38,6 +39,7 @@ public class DefaultAuthenticator implements Authenticator {
     /**
      * No-Op for default authenticator
      */
+    @Override
     public void authenticate() throws IOException {}
 
     /**
@@ -45,18 +47,22 @@ public class DefaultAuthenticator implements Authenticator {
      * @return Principal
      * @throws KafkaException
      */
+    @Override
     public Principal principal() throws KafkaException {
-        if (principal == null)
+        if (principal == null) {
             principal = principalBuilder.buildPrincipal(transportLayer, this);
+        }
         return principal;
     }
 
+    @Override
     public void close() throws IOException {}
 
     /**
      * DefaultAuthenticator doesn't implement any additional authentication mechanism.
      * @return true
      */
+    @Override
     public boolean complete() {
         return true;
     }

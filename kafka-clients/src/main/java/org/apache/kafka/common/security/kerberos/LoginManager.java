@@ -55,10 +55,12 @@ public class LoginManager {
             throw new IllegalArgumentException(message);
         }
 
-        if (jaasServiceName != null)
+        if (jaasServiceName != null) {
             return jaasServiceName;
-        if (configServiceName != null)
+        }
+        if (configServiceName != null) {
             return configServiceName;
+        }
 
         throw new IllegalArgumentException("No serviceName defined in either JAAS or Kafka config");
     }
@@ -107,9 +109,9 @@ public class LoginManager {
      */
     public void release() {
         synchronized (LoginManager.class) {
-            if (refCount == 0)
+            if (refCount == 0) {
                 throw new IllegalStateException("release called on LoginManager with refCount == 0");
-            else if (refCount == 1) {
+            } else if (refCount == 1) {
                 CACHED_INSTANCES.remove(loginType);
                 login.shutdown();
             }

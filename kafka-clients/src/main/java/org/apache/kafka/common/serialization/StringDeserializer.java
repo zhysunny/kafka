@@ -28,19 +28,22 @@ public class StringDeserializer implements Deserializer<String> {
     public void configure(Map<String, ?> configs, boolean isKey) {
         String propertyName = isKey ? "key.deserializer.encoding" : "value.deserializer.encoding";
         Object encodingValue = configs.get(propertyName);
-        if (encodingValue == null)
+        if (encodingValue == null) {
             encodingValue = configs.get("deserializer.encoding");
-        if (encodingValue != null && encodingValue instanceof String)
+        }
+        if (encodingValue != null && encodingValue instanceof String) {
             encoding = (String) encodingValue;
+        }
     }
 
     @Override
     public String deserialize(String topic, byte[] data) {
         try {
-            if (data == null)
+            if (data == null) {
                 return null;
-            else
+            } else {
                 return new String(data, encoding);
+            }
         } catch (UnsupportedEncodingException e) {
             throw new SerializationException("Error when deserializing byte[] to string due to unsupported encoding " + encoding);
         }

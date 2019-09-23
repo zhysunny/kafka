@@ -16,13 +16,16 @@ import java.util.Map;
 
 public class LongSerializer implements Serializer<Long> {
 
+    @Override
     public void configure(Map<String, ?> configs, boolean isKey) {
         // nothing to do
     }
 
+    @Override
     public byte[] serialize(String topic, Long data) {
-        if (data == null)
+        if (data == null) {
             return null;
+        }
 
         return new byte[] {
             (byte) (data >>> 56),
@@ -36,6 +39,7 @@ public class LongSerializer implements Serializer<Long> {
         };
     }
 
+    @Override
     public void close() {
         // nothing to do
     }

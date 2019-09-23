@@ -53,8 +53,9 @@ public class JaasUtils {
 
         for (AppConfigurationEntry entry: configurationEntries) {
             Object val = entry.getOptions().get(key);
-            if (val != null)
+            if (val != null) {
                 return (String) val;
+            }
         }
         return null;
     }

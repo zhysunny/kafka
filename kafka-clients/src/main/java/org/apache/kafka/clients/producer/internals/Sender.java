@@ -119,6 +119,7 @@ public class Sender implements Runnable {
     /**
      * The main run loop for the sender thread
      */
+    @Override
     public void run() {
         log.debug("Starting Kafka producer I/O thread.");
 
@@ -169,8 +170,9 @@ public class Sender implements Runnable {
         RecordAccumulator.ReadyCheckResult result = this.accumulator.ready(cluster, now);
 
         // if there are any partitions whose leaders are not known yet, force metadata update
-        if (result.unknownLeadersExist)
+        if (result.unknownLeadersExist) {
             this.metadata.requestUpdate();
+        }
 
         // remove any nodes we aren't ready to send to
         Iterator<Node> iter = result.readyNodes.iterator();
@@ -191,8 +193,9 @@ public class Sender implements Runnable {
 
         List<RecordBatch> expiredBatches = this.accumulator.abortExpiredBatches(this.requestTimeout, cluster, now);
         // update sensors
-        for (RecordBatch expiredBatch : expiredBatches)
+        for (RecordBatch expiredBatch : expiredBatches) {
             this.sensors.recordErrors(expiredBatch.topicPartition.topic(), expiredBatch.recordCount);
+        }
 
         sensors.updateProduceRequestMetrics(batches);
         List<ClientRequest> requests = createProduceRequests(batches, now);
@@ -206,8 +209,9 @@ public class Sender implements Runnable {
             log.trace("Created {} produce requests: {}", requests.size(), requests);
             pollTimeout = 0;
         }
-        for (ClientRequest request : requests)
+        for (ClientRequest request : requests) {
             client.send(request, now);
+        }
 
         // if some partitions are already ready to be sent, the select time would be 0;
         // otherwise if some partition already has some data accumulated but not ready yet,
@@ -242,8 +246,9 @@ public class Sender implements Runnable {
             log.trace("Cancelled request {} due to node {} being disconnected", response, response.request()
                     .request()
                     .destination());
-            for (RecordBatch batch : batches.values())
+            for (RecordBatch batch : batches.values()) {
                 completeBatch(batch, Errors.NETWORK_EXCEPTION, -1L, correlationId, now);
+            }
         } else {
             log.trace("Received produce response from node {} with correlation id {}",
                     response.request().request().destination(),
@@ -264,8 +269,9 @@ public class Sender implements Runnable {
                         produceResponse.getThrottleTime());
             } else {
                 // this is the acks = 0 case, just complete all requests
-                for (RecordBatch batch : batches.values())
+                for (RecordBatch batch : batches.values()) {
                     completeBatch(batch, Errors.NONE, -1L, correlationId, now);
+                }
             }
         }
     }
@@ -291,18 +297,21 @@ public class Sender implements Runnable {
             this.sensors.recordRetries(batch.topicPartition.topic(), batch.recordCount);
         } else {
             RuntimeException exception;
-            if (error == Errors.TOPIC_AUTHORIZATION_FAILED)
+            if (error == Errors.TOPIC_AUTHORIZATION_FAILED) {
                 exception = new TopicAuthorizationException(batch.topicPartition.topic());
-            else
+            } else {
                 exception = error.exception();
+            }
             // tell the user the result of their request
             batch.done(baseOffset, exception);
             this.accumulator.deallocate(batch);
-            if (error != Errors.NONE)
+            if (error != Errors.NONE) {
                 this.sensors.recordErrors(batch.topicPartition.topic(), batch.recordCount);
+            }
         }
-        if (error.exception() instanceof InvalidMetadataException)
+        if (error.exception() instanceof InvalidMetadataException) {
             metadata.requestUpdate();
+        }
     }
 
     /**
@@ -317,8 +326,9 @@ public class Sender implements Runnable {
      */
     private List<ClientRequest> createProduceRequests(Map<Integer, List<RecordBatch>> collated, long now) {
         List<ClientRequest> requests = new ArrayList<ClientRequest>(collated.size());
-        for (Map.Entry<Integer, List<RecordBatch>> entry : collated.entrySet())
+        for (Map.Entry<Integer, List<RecordBatch>> entry : collated.entrySet()) {
             requests.add(produceRequest(now, entry.getKey(), acks, requestTimeout, entry.getValue()));
+        }
         return requests;
     }
 
@@ -338,6 +348,7 @@ public class Sender implements Runnable {
                 this.client.nextRequestHeader(ApiKeys.PRODUCE),
                 request.toStruct());
         RequestCompletionHandler callback = new RequestCompletionHandler() {
+            @Override
             public void onComplete(ClientResponse response) {
                 handleProduceResponse(response, recordsByPartition, time.milliseconds());
             }
@@ -424,12 +435,14 @@ public class Sender implements Runnable {
 
             m = new MetricName("requests-in-flight", metricGrpName, "The current number of in-flight requests awaiting a response.", metricTags);
             this.metrics.addMetric(m, new Measurable() {
+                @Override
                 public double measure(MetricConfig config, long now) {
                     return client.inFlightRequestCount();
                 }
             });
             m = new MetricName("metadata-age", metricGrpName, "The age in seconds of the current producer metadata being used.", metricTags);
             metrics.addMetric(m, new Measurable() {
+                @Override
                 public double measure(MetricConfig config, long now) {
                     return (now - metadata.lastSuccessfulUpdate()) / 1000.0;
                 }
@@ -513,8 +526,9 @@ public class Sender implements Runnable {
             this.retrySensor.record(count, now);
             String topicRetryName = "topic." + topic + ".record-retries";
             Sensor topicRetrySensor = this.metrics.getSensor(topicRetryName);
-            if (topicRetrySensor != null)
+            if (topicRetrySensor != null) {
                 topicRetrySensor.record(count, now);
+            }
         }
 
         public void recordErrors(String topic, int count) {
@@ -522,8 +536,9 @@ public class Sender implements Runnable {
             this.errorSensor.record(count, now);
             String topicErrorName = "topic." + topic + ".record-errors";
             Sensor topicErrorSensor = this.metrics.getSensor(topicErrorName);
-            if (topicErrorSensor != null)
+            if (topicErrorSensor != null) {
                 topicErrorSensor.record(count, now);
+            }
         }
 
         public void recordLatency(String node, long latency) {
@@ -532,8 +547,9 @@ public class Sender implements Runnable {
             if (!node.isEmpty()) {
                 String nodeTimeName = "node-" + node + ".latency";
                 Sensor nodeRequestTime = this.metrics.getSensor(nodeTimeName);
-                if (nodeRequestTime != null)
+                if (nodeRequestTime != null) {
                     nodeRequestTime.record(latency, now);
+                }
             }
         }
 

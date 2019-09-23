@@ -39,8 +39,9 @@ public class KerberosName {
      * Creates an instance of `KerberosName` with the provided parameters.
      */
     public KerberosName(String serviceName, String hostName, String realm) {
-        if (serviceName == null)
+        if (serviceName == null) {
             throw new IllegalArgumentException("serviceName must not be null");
+        }
         this.serviceName = serviceName;
         this.hostName = hostName;
         this.realm = realm;

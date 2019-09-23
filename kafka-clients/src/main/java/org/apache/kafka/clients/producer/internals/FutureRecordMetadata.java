@@ -46,16 +46,18 @@ public final class FutureRecordMetadata implements Future<RecordMetadata> {
     @Override
     public RecordMetadata get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
         boolean occurred = this.result.await(timeout, unit);
-        if (!occurred)
+        if (!occurred) {
             throw new TimeoutException("Timeout after waiting for " + TimeUnit.MILLISECONDS.convert(timeout, unit) + " ms.");
+        }
         return valueOrError();
     }
 
     RecordMetadata valueOrError() throws ExecutionException {
-        if (this.result.error() != null)
+        if (this.result.error() != null) {
             throw new ExecutionException(this.result.error());
-        else
+        } else {
             return value();
+        }
     }
     
     RecordMetadata value() {

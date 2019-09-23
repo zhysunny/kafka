@@ -32,8 +32,9 @@ public class ByteBufferSend implements Send {
         super();
         this.destination = destination;
         this.buffers = buffers;
-        for (int i = 0; i < buffers.length; i++)
+        for (int i = 0; i < buffers.length; i++) {
             remaining += buffers[i].remaining();
+        }
         this.size = remaining;
     }
 
@@ -55,14 +56,16 @@ public class ByteBufferSend implements Send {
     @Override
     public long writeTo(GatheringByteChannel channel) throws IOException {
         long written = channel.write(buffers);
-        if (written < 0)
+        if (written < 0) {
             throw new EOFException("Wrote negative bytes to channel. This shouldn't happen.");
+        }
         remaining -= written;
         // This is temporary workaround. As Send , Receive interfaces are being used by BlockingChannel.
         // Once BlockingChannel is removed we can make Send, Receive to work with transportLayer rather than
         // GatheringByteChannel or ScatteringByteChannel.
-        if (channel instanceof TransportLayer)
+        if (channel instanceof TransportLayer) {
             pending = ((TransportLayer) channel).hasPendingWrites();
+        }
 
         return written;
     }

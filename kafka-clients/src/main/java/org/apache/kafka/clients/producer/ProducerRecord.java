@@ -36,8 +36,9 @@ public final class ProducerRecord<K, V> {
      * @param value The record contents
      */
     public ProducerRecord(String topic, Integer partition, K key, V value) {
-        if (topic == null)
+        if (topic == null) {
             throw new IllegalArgumentException("Topic cannot be null");
+        }
         this.topic = topic;
         this.partition = partition;
         this.key = key;
@@ -102,21 +103,23 @@ public final class ProducerRecord<K, V> {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o)
+        if (this == o) {
             return true;
-        else if (!(o instanceof ProducerRecord))
+        } else if (!(o instanceof ProducerRecord)) {
             return false;
+        }
 
         ProducerRecord<?, ?> that = (ProducerRecord<?, ?>) o;
 
-        if (key != null ? !key.equals(that.key) : that.key != null) 
+        if (key != null ? !key.equals(that.key) : that.key != null) {
             return false;
-        else if (partition != null ? !partition.equals(that.partition) : that.partition != null) 
+        } else if (partition != null ? !partition.equals(that.partition) : that.partition != null) {
             return false;
-        else if (topic != null ? !topic.equals(that.topic) : that.topic != null) 
+        } else if (topic != null ? !topic.equals(that.topic) : that.topic != null) {
             return false;
-        else if (value != null ? !value.equals(that.value) : that.value != null) 
+        } else if (value != null ? !value.equals(that.value) : that.value != null) {
             return false;
+        }
 
         return true;
     }

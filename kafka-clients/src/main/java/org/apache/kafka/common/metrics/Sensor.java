@@ -57,10 +57,12 @@ public final class Sensor {
 
     /* Validate that this sensor doesn't end up referencing itself */
     private void checkForest(Set<Sensor> sensors) {
-        if (!sensors.add(this))
+        if (!sensors.add(this)) {
             throw new IllegalArgumentException("Circular dependency in sensors: " + name() + " is its own parent.");
-        for (int i = 0; i < parents.length; i++)
+        }
+        for (int i = 0; i < parents.length; i++) {
             parents[i].checkForest(sensors);
+        }
     }
 
     /**
@@ -99,12 +101,14 @@ public final class Sensor {
         this.lastRecordTime = time.milliseconds();
         synchronized (this) {
             // increment all the stats
-            for (int i = 0; i < this.stats.size(); i++)
+            for (int i = 0; i < this.stats.size(); i++) {
                 this.stats.get(i).record(config, value, timeMs);
+            }
             checkQuotas(timeMs);
         }
-        for (int i = 0; i < parents.length; i++)
+        for (int i = 0; i < parents.length; i++) {
             parents[i].record(value, timeMs);
+        }
     }
 
     /**

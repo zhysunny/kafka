@@ -66,6 +66,7 @@ public interface Producer<K, V> extends Closeable {
     /**
      * Close this producer
      */
+    @Override
     public void close();
 
     /**

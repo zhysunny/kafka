@@ -100,8 +100,9 @@ public class ListOffsetResponse extends AbstractRequestResponse {
                 short errorCode = partitionResponse.getShort(ERROR_CODE_KEY_NAME);
                 Object[] offsets = partitionResponse.getArray(OFFSETS_KEY_NAME);
                 List<Long> offsetsList = new ArrayList<Long>();
-                for (Object offset: offsets)
+                for (Object offset: offsets) {
                     offsetsList.add((Long) offset);
+                }
                 PartitionData partitionData = new PartitionData(errorCode, offsetsList);
                 responseData.put(new TopicPartition(topic, partition), partitionData);
             }

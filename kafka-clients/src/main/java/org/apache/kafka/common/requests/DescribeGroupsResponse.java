@@ -216,8 +216,9 @@ public class DescribeGroupsResponse extends AbstractRequestResponse {
     public static DescribeGroupsResponse fromError(Errors error, List<String> groupIds) {
         GroupMetadata errorMetadata = GroupMetadata.forError(error);
         Map<String, GroupMetadata> groups = new HashMap<>();
-        for (String groupId : groupIds)
+        for (String groupId : groupIds) {
             groups.put(groupId, errorMetadata);
+        }
         return new DescribeGroupsResponse(groups);
     }
 

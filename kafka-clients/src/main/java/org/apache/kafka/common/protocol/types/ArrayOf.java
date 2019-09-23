@@ -34,18 +34,21 @@ public class ArrayOf extends Type {
         Object[] objs = (Object[]) o;
         int size = objs.length;
         buffer.putInt(size);
-        for (int i = 0; i < size; i++)
+        for (int i = 0; i < size; i++) {
             type.write(buffer, objs[i]);
+        }
     }
 
     @Override
     public Object read(ByteBuffer buffer) {
         int size = buffer.getInt();
-        if (size > buffer.remaining())
+        if (size > buffer.remaining()) {
             throw new SchemaException("Error reading array of size " + size + ", only " + buffer.remaining() + " bytes available");
+        }
         Object[] objs = new Object[size];
-        for (int i = 0; i < size; i++)
+        for (int i = 0; i < size; i++) {
             objs[i] = type.read(buffer);
+        }
         return objs;
     }
 
@@ -53,8 +56,9 @@ public class ArrayOf extends Type {
     public int sizeOf(Object o) {
         Object[] objs = (Object[]) o;
         int size = 4;
-        for (int i = 0; i < objs.length; i++)
+        for (int i = 0; i < objs.length; i++) {
             size += type.sizeOf(objs[i]);
+        }
         return size;
     }
 
@@ -71,8 +75,9 @@ public class ArrayOf extends Type {
     public Object[] validate(Object item) {
         try {
             Object[] array = (Object[]) item;
-            for (int i = 0; i < array.length; i++)
+            for (int i = 0; i < array.length; i++) {
                 type.validate(array[i]);
+            }
             return array;
         } catch (ClassCastException e) {
             throw new SchemaException("Not an Object[].");

@@ -49,6 +49,7 @@ public class SaslChannelBuilder implements ChannelBuilder {
         this.securityProtocol = securityProtocol;
     }
 
+    @Override
     public void configure(Map<String, ?> configs) throws KafkaException {
         try {
             this.configs = configs;
@@ -62,8 +63,9 @@ public class SaslChannelBuilder implements ChannelBuilder {
             }
 
             List<String> principalToLocalRules = (List<String>) configs.get(SaslConfigs.SASL_KERBEROS_PRINCIPAL_TO_LOCAL_RULES);
-            if (principalToLocalRules != null)
+            if (principalToLocalRules != null) {
                 kerberosShortNamer = KerberosShortNamer.fromUnparsedRules(defaultRealm, principalToLocalRules);
+            }
 
             if (this.securityProtocol == SecurityProtocol.SASL_SSL) {
                 // Disable SSL client authentication as we are using SASL authentication
@@ -75,16 +77,18 @@ public class SaslChannelBuilder implements ChannelBuilder {
         }
     }
 
+    @Override
     public KafkaChannel buildChannel(String id, SelectionKey key, int maxReceiveSize) throws KafkaException {
         try {
             SocketChannel socketChannel = (SocketChannel) key.channel();
             TransportLayer transportLayer = buildTransportLayer(id, key, socketChannel);
             Authenticator authenticator;
-            if (mode == Mode.SERVER)
+            if (mode == Mode.SERVER) {
                 authenticator = new SaslServerAuthenticator(id, loginManager.subject(), kerberosShortNamer, maxReceiveSize);
-            else
+            } else {
                 authenticator = new SaslClientAuthenticator(id, loginManager.subject(), loginManager.serviceName(),
                         socketChannel.socket().getInetAddress().getHostName());
+            }
             // Both authenticators don't use `PrincipalBuilder`, so we pass `null` for now. Reconsider if this changes.
             authenticator.configure(transportLayer, null, this.configs);
             return new KafkaChannel(id, transportLayer, authenticator, maxReceiveSize);
@@ -94,6 +98,7 @@ public class SaslChannelBuilder implements ChannelBuilder {
         }
     }
 
+    @Override
     public void close()  {
         this.loginManager.release();
     }

@@ -32,15 +32,19 @@ public class ByteBufferOutputStream extends OutputStream {
         this.buffer = buffer;
     }
 
+    @Override
     public void write(int b) {
-        if (buffer.remaining() < 1)
+        if (buffer.remaining() < 1) {
             expandBuffer(buffer.capacity() + 1);
+        }
         buffer.put((byte) b);
     }
 
+    @Override
     public void write(byte[] bytes, int off, int len) {
-        if (buffer.remaining() < len)
+        if (buffer.remaining() < len) {
             expandBuffer(buffer.capacity() + len);
+        }
         buffer.put(bytes, off, len);
     }
 

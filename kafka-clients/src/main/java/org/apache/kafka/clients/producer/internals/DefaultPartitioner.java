@@ -53,6 +53,7 @@ public class DefaultPartitioner implements Partitioner {
         return number & 0x7fffffff;
     }
 
+    @Override
     public void configure(Map<String, ?> configs) {}
 
     /**
@@ -65,6 +66,7 @@ public class DefaultPartitioner implements Partitioner {
      * @param valueBytes serialized value to partition on or null
      * @param cluster The current cluster metadata
      */
+    @Override
     public int partition(String topic, Object key, byte[] keyBytes, Object value, byte[] valueBytes, Cluster cluster) {
         List<PartitionInfo> partitions = cluster.partitionsForTopic(topic);
         int numPartitions = partitions.size();
@@ -84,6 +86,7 @@ public class DefaultPartitioner implements Partitioner {
         }
     }
 
+    @Override
     public void close() {}
 
 }

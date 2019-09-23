@@ -63,10 +63,12 @@ public class JmxReporter implements MetricsReporter {
     @Override
     public void init(List<KafkaMetric> metrics) {
         synchronized (LOCK) {
-            for (KafkaMetric metric : metrics)
+            for (KafkaMetric metric : metrics) {
                 addAttribute(metric);
-            for (KafkaMbean mbean : mbeans.values())
+            }
+            for (KafkaMbean mbean : mbeans.values()) {
                 reregister(mbean);
+            }
         }
     }
 
@@ -83,10 +85,11 @@ public class JmxReporter implements MetricsReporter {
         synchronized (LOCK) {
             KafkaMbean mbean = removeAttribute(metric);
             if (mbean != null) {
-                if (mbean.metrics.isEmpty())
+                if (mbean.metrics.isEmpty()) {
                     unregister(mbean);
-                else
+                } else {
                     reregister(mbean);
+                }
             }
         }
     }
@@ -95,8 +98,9 @@ public class JmxReporter implements MetricsReporter {
         MetricName metricName = metric.metricName();
         String mBeanName = getMBeanName(metricName);
         KafkaMbean mbean = this.mbeans.get(mBeanName);
-        if (mbean != null)
+        if (mbean != null) {
             mbean.removeAttribute(metricName.name());
+        }
         return mbean;
     }
 
@@ -104,8 +108,9 @@ public class JmxReporter implements MetricsReporter {
         try {
             MetricName metricName = metric.metricName();
             String mBeanName = getMBeanName(metricName);
-            if (!this.mbeans.containsKey(mBeanName))
+            if (!this.mbeans.containsKey(mBeanName)) {
                 mbeans.put(mBeanName, new KafkaMbean(mBeanName));
+            }
             KafkaMbean mbean = this.mbeans.get(mBeanName);
             mbean.setAttribute(metricName.name(), metric);
             return mbean;
@@ -124,8 +129,9 @@ public class JmxReporter implements MetricsReporter {
         mBeanName.append(":type=");
         mBeanName.append(metricName.group());
         for (Map.Entry<String, String> entry : metricName.tags().entrySet()) {
-            if (entry.getKey().length() <= 0 || entry.getValue().length() <= 0)
+            if (entry.getKey().length() <= 0 || entry.getValue().length() <= 0) {
                 continue;
+            }
             mBeanName.append(",");
             mBeanName.append(entry.getKey());
             mBeanName.append("=");
@@ -134,18 +140,21 @@ public class JmxReporter implements MetricsReporter {
         return mBeanName.toString();
     }
 
+    @Override
     public void close() {
         synchronized (LOCK) {
-            for (KafkaMbean mbean : this.mbeans.values())
+            for (KafkaMbean mbean : this.mbeans.values()) {
                 unregister(mbean);
+            }
         }
     }
 
     private void unregister(KafkaMbean mbean) {
         MBeanServer server = ManagementFactory.getPlatformMBeanServer();
         try {
-            if (server.isRegistered(mbean.name()))
+            if (server.isRegistered(mbean.name())) {
                 server.unregisterMBean(mbean.name());
+            }
         } catch (JMException e) {
             throw new KafkaException("Error unregistering mbean", e);
         }
@@ -179,18 +188,20 @@ public class JmxReporter implements MetricsReporter {
 
         @Override
         public Object getAttribute(String name) throws AttributeNotFoundException, MBeanException, ReflectionException {
-            if (this.metrics.containsKey(name))
+            if (this.metrics.containsKey(name)) {
                 return this.metrics.get(name).value();
-            else
+            } else {
                 throw new AttributeNotFoundException("Could not find attribute " + name);
+            }
         }
 
         @Override
         public AttributeList getAttributes(String[] names) {
             try {
                 AttributeList list = new AttributeList();
-                for (String name : names)
+                for (String name : names) {
                     list.add(new Attribute(name, getAttribute(name)));
+                }
                 return list;
             } catch (Exception e) {
                 log.error("Error getting JMX attribute: ", e);

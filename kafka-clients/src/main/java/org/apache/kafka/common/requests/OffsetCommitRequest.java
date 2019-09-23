@@ -161,8 +161,9 @@ public class OffsetCommitRequest extends AbstractRequest {
                 partitionData.set(PARTITION_KEY_NAME, partitionEntry.getKey());
                 partitionData.set(COMMIT_OFFSET_KEY_NAME, fetchPartitionData.offset);
                 // Only for v1
-                if (partitionData.hasField(TIMESTAMP_KEY_NAME))
+                if (partitionData.hasField(TIMESTAMP_KEY_NAME)) {
                     partitionData.set(TIMESTAMP_KEY_NAME, fetchPartitionData.timestamp);
+                }
                 partitionData.set(METADATA_KEY_NAME, fetchPartitionData.metadata);
                 partitionArray.add(partitionData);
             }
@@ -177,22 +178,25 @@ public class OffsetCommitRequest extends AbstractRequest {
 
         groupId = struct.getString(GROUP_ID_KEY_NAME);
         // This field only exists in v1.
-        if (struct.hasField(GENERATION_ID_KEY_NAME))
+        if (struct.hasField(GENERATION_ID_KEY_NAME)) {
             generationId = struct.getInt(GENERATION_ID_KEY_NAME);
-        else
+        } else {
             generationId = DEFAULT_GENERATION_ID;
+        }
 
         // This field only exists in v1.
-        if (struct.hasField(MEMBER_ID_KEY_NAME))
+        if (struct.hasField(MEMBER_ID_KEY_NAME)) {
             memberId = struct.getString(MEMBER_ID_KEY_NAME);
-        else
+        } else {
             memberId = DEFAULT_MEMBER_ID;
+        }
 
         // This field only exists in v2
-        if (struct.hasField(RETENTION_TIME_KEY_NAME))
+        if (struct.hasField(RETENTION_TIME_KEY_NAME)) {
             retentionTime = struct.getLong(RETENTION_TIME_KEY_NAME);
-        else
+        } else {
             retentionTime = DEFAULT_RETENTION_TIME;
+        }
 
         offsetData = new HashMap<TopicPartition, PartitionData>();
         for (Object topicDataObj : struct.getArray(TOPICS_KEY_NAME)) {

@@ -120,8 +120,9 @@ public class NetworkClient implements KafkaClient {
          * super constructor is invoked.
          */
         if (metadataUpdater == null) {
-            if (metadata == null)
+            if (metadata == null) {
                 throw new IllegalArgumentException("`metadata` must not be null");
+            }
             this.metadataUpdater = new DefaultMetadataUpdater(metadata);
         } else {
             this.metadataUpdater = metadataUpdater;
@@ -147,12 +148,15 @@ public class NetworkClient implements KafkaClient {
      */
     @Override
     public boolean ready(Node node, long now) {
-        if (isReady(node, now))
+        if (isReady(node, now)) {
             return true;
+        }
 
         if (connectionStates.canConnect(node.idString(), now))
             // if we are interested in sending to a node and we don't have a connection to it, initiate one
+        {
             initiateConnect(node, now);
+        }
 
         return false;
     }
@@ -165,8 +169,9 @@ public class NetworkClient implements KafkaClient {
     @Override
     public void close(String nodeId) {
         selector.close(nodeId);
-        for (ClientRequest request : inFlightRequests.clearAll(nodeId))
+        for (ClientRequest request : inFlightRequests.clearAll(nodeId)) {
             metadataUpdater.maybeHandleDisconnection(request);
+        }
         connectionStates.remove(nodeId);
     }
 
@@ -229,8 +234,9 @@ public class NetworkClient implements KafkaClient {
     @Override
     public void send(ClientRequest request, long now) {
         String nodeId = request.request().destination();
-        if (!canSendRequest(nodeId))
+        if (!canSendRequest(nodeId)) {
             throw new IllegalStateException("Attempt to send a request to node " + nodeId + " which is not ready.");
+        }
         doSend(request, now);
     }
 
@@ -379,8 +385,9 @@ public class NetworkClient implements KafkaClient {
         connectionStates.disconnected(nodeId, now);
         for (ClientRequest request : this.inFlightRequests.clearAll(nodeId)) {
             log.trace("Cancelled request {} due to node {} being disconnected", request, nodeId);
-            if (!metadataUpdater.maybeHandleDisconnection(request))
+            if (!metadataUpdater.maybeHandleDisconnection(request)) {
                 responses.add(new ClientResponse(request, now, true, null));
+            }
         }
     }
 
@@ -401,8 +408,9 @@ public class NetworkClient implements KafkaClient {
         }
 
         // we disconnected, so we should probably refresh our metadata
-        if (nodeIds.size() > 0)
+        if (nodeIds.size() > 0) {
             metadataUpdater.requestUpdate();
+        }
     }
 
     /**
@@ -438,8 +446,9 @@ public class NetworkClient implements KafkaClient {
             short apiVer = req.request().header().apiVersion();
             Struct body = (Struct) ProtoUtils.responseSchema(apiKey, apiVer).read(receive.payload());
             correlate(req.request().header(), header);
-            if (!metadataUpdater.maybeHandleCompletedReceive(req, now, body))
+            if (!metadataUpdater.maybeHandleCompletedReceive(req, now, body)) {
                 responses.add(new ClientResponse(req, now, false, body));
+            }
         }
     }
 
@@ -455,8 +464,9 @@ public class NetworkClient implements KafkaClient {
             processDisconnection(responses, node, now);
         }
         // we got a disconnect so we should probably refresh our metadata and see if that broker is dead
-        if (this.selector.disconnected().size() > 0)
+        if (this.selector.disconnected().size() > 0) {
             metadataUpdater.requestUpdate();
+        }
     }
 
     /**
@@ -473,9 +483,10 @@ public class NetworkClient implements KafkaClient {
      * Validate that the response corresponds to the request we expect or else explode
      */
     private void correlate(RequestHeader requestHeader, ResponseHeader responseHeader) {
-        if (requestHeader.correlationId() != responseHeader.correlationId())
+        if (requestHeader.correlationId() != responseHeader.correlationId()) {
             throw new IllegalStateException("Correlation id for response (" + responseHeader.correlationId()
                     + ") does not match request (" + requestHeader.correlationId() + ")");
+        }
     }
 
     /**

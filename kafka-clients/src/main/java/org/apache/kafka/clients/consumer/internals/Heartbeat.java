@@ -26,8 +26,9 @@ public final class Heartbeat {
     public Heartbeat(long timeout,
                      long interval,
                      long now) {
-        if (interval >= timeout)
+        if (interval >= timeout) {
             throw new IllegalArgumentException("Heartbeat must be set lower than the session timeout");
+        }
 
         this.timeout = timeout;
         this.interval = interval;
@@ -53,10 +54,11 @@ public final class Heartbeat {
     public long timeToNextHeartbeat(long now) {
         long timeSinceLastHeartbeat = now - Math.max(lastHeartbeatSend, lastSessionReset);
 
-        if (timeSinceLastHeartbeat > interval)
+        if (timeSinceLastHeartbeat > interval) {
             return 0;
-        else
+        } else {
             return interval - timeSinceLastHeartbeat;
+        }
     }
 
     public boolean sessionTimeoutExpired(long now) {

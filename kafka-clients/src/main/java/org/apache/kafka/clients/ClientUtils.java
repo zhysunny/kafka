@@ -40,20 +40,23 @@ public class ClientUtils {
             if (url != null && url.length() > 0) {
                 String host = getHost(url);
                 Integer port = getPort(url);
-                if (host == null || port == null)
+                if (host == null || port == null) {
                     throw new ConfigException("Invalid url in " + CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG + ": " + url);
+                }
                 try {
                     InetSocketAddress address = new InetSocketAddress(host, port);
-                    if (address.isUnresolved())
+                    if (address.isUnresolved()) {
                         throw new ConfigException("DNS resolution failed for url in " + CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG + ": " + url);
+                    }
                     addresses.add(address);
                 } catch (NumberFormatException e) {
                     throw new ConfigException("Invalid port in " + CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG + ": " + url);
                 }
             }
         }
-        if (addresses.size() < 1)
+        if (addresses.size() < 1) {
             throw new ConfigException("No bootstrap urls given in " + CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG);
+        }
         return addresses;
     }
 
@@ -74,8 +77,9 @@ public class ClientUtils {
      */
     public static ChannelBuilder createChannelBuilder(Map<String, ?> configs) {
         SecurityProtocol securityProtocol = SecurityProtocol.valueOf((String) configs.get(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG));
-        if (!SecurityProtocol.nonTestingValues().contains(securityProtocol))
+        if (!SecurityProtocol.nonTestingValues().contains(securityProtocol)) {
             throw new ConfigException("Invalid SecurityProtocol " + securityProtocol);
+        }
         return ChannelBuilders.create(securityProtocol, Mode.CLIENT, LoginType.CLIENT, configs);
     }
 

@@ -100,8 +100,9 @@ public class RequestFuture<T> {
      * @param value corresponding value (or null if there is none)
      */
     public void complete(T value) {
-        if (isDone)
+        if (isDone) {
             throw new IllegalStateException("Invalid attempt to complete a request future which is already complete");
+        }
         this.value = value;
         this.isDone = true;
         fireSuccess();
@@ -113,8 +114,9 @@ public class RequestFuture<T> {
      * @param e corresponding exception to be passed to caller
      */
     public void raise(RuntimeException e) {
-        if (isDone)
+        if (isDone) {
             throw new IllegalStateException("Invalid attempt to complete a request future which is already complete");
+        }
         this.exception = e;
         this.isDone = true;
         fireFailure();
@@ -129,13 +131,15 @@ public class RequestFuture<T> {
     }
 
     private void fireSuccess() {
-        for (RequestFutureListener listener: listeners)
+        for (RequestFutureListener listener: listeners) {
             listener.onSuccess(value);
+        }
     }
 
     private void fireFailure() {
-        for (RequestFutureListener listener: listeners)
+        for (RequestFutureListener listener: listeners) {
             listener.onFailure(exception);
+        }
     }
 
     /**
@@ -144,10 +148,11 @@ public class RequestFuture<T> {
      */
     public void addListener(RequestFutureListener<T> listener) {
         if (isDone) {
-            if (exception != null)
+            if (exception != null) {
                 listener.onFailure(exception);
-            else
+            } else {
                 listener.onSuccess(value);
+            }
         } else {
             this.listeners.add(listener);
         }

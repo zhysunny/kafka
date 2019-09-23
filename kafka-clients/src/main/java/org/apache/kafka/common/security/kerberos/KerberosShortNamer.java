@@ -56,8 +56,9 @@ public class KerberosShortNamer {
             if (!matcher.lookingAt()) {
                 throw new IllegalArgumentException("Invalid rule: " + rule);
             }
-            if (rule.length() != matcher.end())
+            if (rule.length() != matcher.end()) {
                 throw new IllegalArgumentException("Invalid rule: `" + rule + "`, unmatched substring: `" + rule.substring(matcher.end()) + "`");
+            }
             if (matcher.group(2) != null) {
                 result.add(new KerberosRule(defaultRealm));
             } else {
@@ -84,16 +85,18 @@ public class KerberosShortNamer {
         String[] params;
         if (kerberosName.hostName() == null) {
             // if it is already simple, just return it
-            if (kerberosName.realm() == null)
+            if (kerberosName.realm() == null) {
                 return kerberosName.serviceName();
+            }
             params = new String[]{kerberosName.realm(), kerberosName.serviceName()};
         } else {
             params = new String[]{kerberosName.realm(), kerberosName.serviceName(), kerberosName.hostName()};
         }
         for (KerberosRule r : principalToLocalRules) {
             String result = r.apply(params);
-            if (result != null)
+            if (result != null) {
                 return result;
+            }
         }
         throw new NoMatchingRule("No rules applied to " + toString());
     }

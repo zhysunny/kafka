@@ -70,8 +70,9 @@ public final class RecordBatch {
             this.maxRecordSize = Math.max(this.maxRecordSize, Record.recordSize(key, value));
             this.lastAppendTime = now;
             FutureRecordMetadata future = new FutureRecordMetadata(this.produceFuture, this.recordCount);
-            if (callback != null)
+            if (callback != null) {
                 thunks.add(new Thunk(callback, future));
+            }
             this.recordCount++;
             return future;
         }

@@ -139,15 +139,17 @@ public class LeaderAndIsrRequest extends AbstractRequest {
 
             Object[] isrArray = partitionStateData.getArray(ISR_KEY_NAME);
             List<Integer> isr = new ArrayList<>(isrArray.length);
-            for (Object r : isrArray)
+            for (Object r : isrArray) {
                 isr.add((Integer) r);
+            }
 
             int zkVersion = partitionStateData.getInt(ZK_VERSION_KEY_NAME);
 
             Object[] replicasArray = partitionStateData.getArray(REPLICAS_KEY_NAME);
             Set<Integer> replicas = new HashSet<>(replicasArray.length);
-            for (Object r : replicasArray)
+            for (Object r : replicasArray) {
                 replicas.add((Integer) r);
+            }
 
             PartitionState partitionState = new PartitionState(controllerEpoch, leader, leaderEpoch, isr, zkVersion, replicas);
             partitionStates.put(new TopicPartition(topic, partition), partitionState);

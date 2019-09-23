@@ -74,8 +74,9 @@ public class MemoryRecords implements Records {
      * Append the given record and offset to the buffer
      */
     public void append(long offset, Record record) {
-        if (!writable)
+        if (!writable) {
             throw new IllegalStateException("Memory records is not writable");
+        }
 
         int size = record.size();
         compressor.putLong(offset);
@@ -89,8 +90,9 @@ public class MemoryRecords implements Records {
      * Append a new record and offset to the buffer
      */
     public void append(long offset, byte[] key, byte[] value) {
-        if (!writable)
+        if (!writable) {
             throw new IllegalStateException("Memory records is not writable");
+        }
 
         int size = Record.recordSize(key, value);
         compressor.putLong(offset);
@@ -141,6 +143,7 @@ public class MemoryRecords implements Records {
     /**
      * The size of this record set
      */
+    @Override
     public int sizeInBytes() {
         if (writable) {
             return compressor.buffer().position();
@@ -153,10 +156,11 @@ public class MemoryRecords implements Records {
      * The compression rate of this record set
      */
     public double compressionRate() {
-        if (compressor == null)
+        if (compressor == null) {
             return 1.0;
-        else
+        } else {
             return compressor.compressionRate();
+        }
     }
 
     /**
@@ -171,8 +175,9 @@ public class MemoryRecords implements Records {
      * Get the byte buffer that backs this records instance for reading
      */
     public ByteBuffer buffer() {
-        if (writable)
+        if (writable) {
             throw new IllegalStateException("The memory records must not be writable any more before getting its underlying buffer");
+        }
 
         return buffer.duplicate();
     }
@@ -236,16 +241,18 @@ public class MemoryRecords implements Records {
                     long offset = stream.readLong();
                     // read record size
                     int size = stream.readInt();
-                    if (size < 0)
+                    if (size < 0) {
                         throw new IllegalStateException("Record with size " + size);
+                    }
                     // read the record, if compression is used we cannot depend on size
                     // and hence has to do extra copy
                     ByteBuffer rec;
                     if (type == CompressionType.NONE) {
                         rec = buffer.slice();
                         int newPos = buffer.position() + size;
-                        if (newPos > buffer.limit())
+                        if (newPos > buffer.limit()) {
                             return allDone();
+                        }
                         buffer.position(newPos);
                         rec.limit(size);
                     } else {

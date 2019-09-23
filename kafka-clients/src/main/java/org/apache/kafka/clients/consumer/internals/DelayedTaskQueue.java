@@ -61,10 +61,11 @@ public class DelayedTaskQueue {
      * @return the remaining time in milliseconds
      */
     public long nextTimeout(long now) {
-        if (tasks.isEmpty())
+        if (tasks.isEmpty()) {
             return Long.MAX_VALUE;
-        else
+        } else {
             return Math.max(tasks.peek().timeout - now, 0);
+        }
     }
 
     /**

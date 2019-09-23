@@ -137,17 +137,20 @@ public class Selector implements Selectable {
      */
     @Override
     public void connect(String id, InetSocketAddress address, int sendBufferSize, int receiveBufferSize) throws IOException {
-        if (this.channels.containsKey(id))
+        if (this.channels.containsKey(id)) {
             throw new IllegalStateException("There is already a connection for id " + id);
+        }
 
         SocketChannel socketChannel = SocketChannel.open();
         socketChannel.configureBlocking(false);
         Socket socket = socketChannel.socket();
         socket.setKeepAlive(true);
-        if (sendBufferSize != Selectable.USE_DEFAULT_BUFFER_SIZE)
+        if (sendBufferSize != Selectable.USE_DEFAULT_BUFFER_SIZE) {
             socket.setSendBufferSize(sendBufferSize);
-        if (receiveBufferSize != Selectable.USE_DEFAULT_BUFFER_SIZE)
+        }
+        if (receiveBufferSize != Selectable.USE_DEFAULT_BUFFER_SIZE) {
             socket.setReceiveBufferSize(receiveBufferSize);
+        }
         socket.setTcpNoDelay(true);
         try {
             socketChannel.connect(address);
@@ -190,8 +193,9 @@ public class Selector implements Selectable {
     @Override
     public void close() {
         List<String> connections = new ArrayList<>(channels.keySet());
-        for (String id : connections)
+        for (String id : connections) {
             close(id);
+        }
         try {
             this.nioSelector.close();
         } catch (IOException e) {
@@ -207,6 +211,7 @@ public class Selector implements Selectable {
      * Queue the given request for sending in the subsequent {@poll(long)} calls
      * @param send The request to send
      */
+    @Override
     public void send(Send send) {
         KafkaChannel channel = channelOrFail(send.destination());
         try {
@@ -244,11 +249,13 @@ public class Selector implements Selectable {
      */
     @Override
     public void poll(long timeout) throws IOException {
-        if (timeout < 0)
+        if (timeout < 0) {
             throw new IllegalArgumentException("timeout should be >= 0");
+        }
         clear();
-        if (hasStagedReceives())
+        if (hasStagedReceives()) {
             timeout = 0;
+        }
         /* check ready keys */
         long startSelect = time.nanoseconds();
         int readyKeys = select(timeout);
@@ -277,14 +284,16 @@ public class Selector implements Selectable {
                     }
 
                     /* if channel is not ready finish prepare */
-                    if (channel.isConnected() && !channel.ready())
+                    if (channel.isConnected() && !channel.ready()) {
                         channel.prepare();
+                    }
 
                     /* if channel is ready read from any connections that have readable data */
                     if (channel.ready() && key.isReadable() && !hasStagedReceive(channel)) {
                         NetworkReceive networkReceive;
-                        while ((networkReceive = channel.read()) != null)
+                        while ((networkReceive = channel.read()) != null) {
                             addToStagedReceives(channel, networkReceive);
+                        }
                     }
 
                     /* if channel is ready write to any sockets that have space in their buffer and for which we have data */
@@ -303,10 +312,11 @@ public class Selector implements Selectable {
                     }
                 } catch (Exception e) {
                     String desc = channel.socketDescription();
-                    if (e instanceof IOException)
+                    if (e instanceof IOException) {
                         log.debug("Connection with {} disconnected", desc, e);
-                    else
+                    } else {
                         log.warn("Unexpected error from {}; closing connection", desc, e);
+                    }
                     close(channel);
                     this.disconnected.add(channel.id());
                 }
@@ -364,14 +374,16 @@ public class Selector implements Selectable {
 
     @Override
     public void muteAll() {
-        for (KafkaChannel channel : this.channels.values())
+        for (KafkaChannel channel : this.channels.values()) {
             mute(channel);
+        }
     }
 
     @Override
     public void unmuteAll() {
-        for (KafkaChannel channel : this.channels.values())
+        for (KafkaChannel channel : this.channels.values()) {
             unmute(channel);
+        }
     }
 
     private void maybeCloseOldestConnection() {
@@ -384,9 +396,10 @@ public class Selector implements Selectable {
                 nextIdleCloseCheckTime = connectionLastActiveTime + connectionsMaxIdleNanos;
                 if (currentTimeNanos > nextIdleCloseCheckTime) {
                     String connectionId = oldestConnectionEntry.getKey();
-                    if (log.isTraceEnabled())
+                    if (log.isTraceEnabled()) {
                         log.trace("About to close the idle connection from " + connectionId
                                 + " due to being idle for " + (currentTimeNanos - connectionLastActiveTime) / 1000 / 1000 + " millis");
+                    }
 
                     disconnected.add(connectionId);
                     close(connectionId);
@@ -416,22 +429,26 @@ public class Selector implements Selectable {
      * @throws IOException
      */
     private int select(long ms) throws IOException {
-        if (ms < 0L)
+        if (ms < 0L) {
             throw new IllegalArgumentException("timeout should be >= 0");
+        }
 
-        if (ms == 0L)
+        if (ms == 0L) {
             return this.nioSelector.selectNow();
-        else
+        } else {
             return this.nioSelector.select(ms);
+        }
     }
 
     /**
      * Close the connection identified by the given id
      */
+    @Override
     public void close(String id) {
         KafkaChannel channel = this.channels.get(id);
-        if (channel != null)
+        if (channel != null) {
             close(channel);
+        }
     }
 
     /**
@@ -456,15 +473,17 @@ public class Selector implements Selectable {
     @Override
     public boolean isChannelReady(String id) {
         KafkaChannel channel = this.channels.get(id);
-        if (channel == null)
+        if (channel == null) {
             return false;
+        }
         return channel.ready();
     }
 
     private KafkaChannel channelOrFail(String id) {
         KafkaChannel channel = this.channels.get(id);
-        if (channel == null)
+        if (channel == null) {
             throw new IllegalStateException("Attempt to retrieve channel for which there is no open connection. Connection id " + id + " existing connections " + channels.keySet().toString());
+        }
         return channel;
     }
 
@@ -502,8 +521,9 @@ public class Selector implements Selectable {
      */
     private boolean hasStagedReceives() {
         for (KafkaChannel channel : this.stagedReceives.keySet()) {
-            if (!channel.isMute())
+            if (!channel.isMute()) {
                 return true;
+            }
         }
         return false;
     }
@@ -513,8 +533,9 @@ public class Selector implements Selectable {
      * adds a receive to staged receieves
      */
     private void addToStagedReceives(KafkaChannel channel, NetworkReceive receive) {
-        if (!stagedReceives.containsKey(channel))
+        if (!stagedReceives.containsKey(channel)) {
             stagedReceives.put(channel, new ArrayDeque<NetworkReceive>());
+        }
 
         Deque<NetworkReceive> deque = stagedReceives.get(channel);
         deque.add(receive);
@@ -534,8 +555,9 @@ public class Selector implements Selectable {
                     NetworkReceive networkReceive = deque.poll();
                     this.completedReceives.add(networkReceive);
                     this.sensors.recordBytesReceived(channel.id(), networkReceive.payload().limit());
-                    if (deque.size() == 0)
+                    if (deque.size() == 0) {
                         iter.remove();
+                    }
                 }
             }
         }
@@ -612,6 +634,7 @@ public class Selector implements Selectable {
             metricName = new MetricName("connection-count", metricGrpName, "The current number of active connections.", metricTags);
             topLevelMetricNames.add(metricName);
             this.metrics.addMetric(metricName, new Measurable() {
+                @Override
                 public double measure(MetricConfig config, long now) {
                     return channels.size();
                 }
@@ -669,8 +692,9 @@ public class Selector implements Selectable {
             if (!connectionId.isEmpty()) {
                 String nodeRequestName = "node-" + connectionId + ".bytes-sent";
                 Sensor nodeRequest = this.metrics.getSensor(nodeRequestName);
-                if (nodeRequest != null)
+                if (nodeRequest != null) {
                     nodeRequest.record(bytes, now);
+                }
             }
         }
 
@@ -680,16 +704,19 @@ public class Selector implements Selectable {
             if (!connection.isEmpty()) {
                 String nodeRequestName = "node-" + connection + ".bytes-received";
                 Sensor nodeRequest = this.metrics.getSensor(nodeRequestName);
-                if (nodeRequest != null)
+                if (nodeRequest != null) {
                     nodeRequest.record(bytes, now);
+                }
             }
         }
 
         public void close() {
-            for (MetricName metricName : topLevelMetricNames)
+            for (MetricName metricName : topLevelMetricNames) {
                 metrics.removeMetric(metricName);
-            for (Sensor sensor : sensors)
+            }
+            for (Sensor sensor : sensors) {
                 metrics.removeSensor(sensor.name());
+            }
         }
     }
 

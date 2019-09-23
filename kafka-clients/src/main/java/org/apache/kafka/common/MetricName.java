@@ -86,12 +86,14 @@ public final class MetricName {
     }
 
     private static Map<String, String> getTags(String... keyValue) {
-        if ((keyValue.length % 2) != 0)
+        if ((keyValue.length % 2) != 0) {
             throw new IllegalArgumentException("keyValue needs to be specified in pairs");
+        }
         Map<String, String> tags = new HashMap<String, String>();
 
-        for (int i = 0; i < keyValue.length; i += 2)
+        for (int i = 0; i < keyValue.length; i += 2) {
             tags.put(keyValue[i], keyValue[i + 1]);
+        }
 
         return tags;
     }
@@ -140,8 +142,9 @@ public final class MetricName {
 
     @Override
     public int hashCode() {
-        if (hash != 0)
+        if (hash != 0) {
             return hash;
+        }
         final int prime = 31;
         int result = 1;
         result = prime * result + ((group == null) ? 0 : group.hashCode());
@@ -153,28 +156,37 @@ public final class MetricName {
 
     @Override
     public boolean equals(Object obj) {
-        if (this == obj)
+        if (this == obj) {
             return true;
-        if (obj == null)
+        }
+        if (obj == null) {
             return false;
-        if (getClass() != obj.getClass())
+        }
+        if (getClass() != obj.getClass()) {
             return false;
+        }
         MetricName other = (MetricName) obj;
         if (group == null) {
-            if (other.group != null)
+            if (other.group != null) {
                 return false;
-        } else if (!group.equals(other.group))
+            }
+        } else if (!group.equals(other.group)) {
             return false;
+        }
         if (name == null) {
-            if (other.name != null)
+            if (other.name != null) {
                 return false;
-        } else if (!name.equals(other.name))
+            }
+        } else if (!name.equals(other.name)) {
             return false;
+        }
         if (tags == null) {
-            if (other.tags != null)
+            if (other.tags != null) {
                 return false;
-        } else if (!tags.equals(other.tags))
+            }
+        } else if (!tags.equals(other.tags)) {
             return false;
+        }
         return true;
     }
 

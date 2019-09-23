@@ -293,10 +293,12 @@ public class ProducerConfig extends AbstractConfig {
                                                             Serializer<?> keySerializer, Serializer<?> valueSerializer) {
         Map<String, Object> newConfigs = new HashMap<String, Object>();
         newConfigs.putAll(configs);
-        if (keySerializer != null)
+        if (keySerializer != null) {
             newConfigs.put(KEY_SERIALIZER_CLASS_CONFIG, keySerializer.getClass());
-        if (valueSerializer != null)
+        }
+        if (valueSerializer != null) {
             newConfigs.put(VALUE_SERIALIZER_CLASS_CONFIG, valueSerializer.getClass());
+        }
         return newConfigs;
     }
 
@@ -304,10 +306,12 @@ public class ProducerConfig extends AbstractConfig {
                                                    Serializer<?> keySerializer, Serializer<?> valueSerializer) {
         Properties newProperties = new Properties();
         newProperties.putAll(properties);
-        if (keySerializer != null)
+        if (keySerializer != null) {
             newProperties.put(KEY_SERIALIZER_CLASS_CONFIG, keySerializer.getClass().getName());
-        if (valueSerializer != null)
+        }
+        if (valueSerializer != null) {
             newProperties.put(VALUE_SERIALIZER_CLASS_CONFIG, valueSerializer.getClass().getName());
+        }
         return newProperties;
     }
 

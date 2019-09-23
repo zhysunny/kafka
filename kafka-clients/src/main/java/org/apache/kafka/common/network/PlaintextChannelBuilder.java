@@ -26,6 +26,7 @@ public class PlaintextChannelBuilder implements ChannelBuilder {
     private PrincipalBuilder principalBuilder;
     private Map<String, ?> configs;
 
+    @Override
     public void configure(Map<String, ?> configs) throws KafkaException {
         try {
             this.configs = configs;
@@ -35,6 +36,7 @@ public class PlaintextChannelBuilder implements ChannelBuilder {
         }
     }
 
+    @Override
     public KafkaChannel buildChannel(String id, SelectionKey key, int maxReceiveSize) throws KafkaException {
         KafkaChannel channel = null;
         try {
@@ -49,6 +51,7 @@ public class PlaintextChannelBuilder implements ChannelBuilder {
         return channel;
     }
 
+    @Override
     public void close() {
         this.principalBuilder.close();
     }

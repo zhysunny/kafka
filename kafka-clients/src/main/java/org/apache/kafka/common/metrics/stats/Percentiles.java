@@ -46,8 +46,9 @@ public class Percentiles extends SampledStat implements CompoundStat {
         if (bucketing == BucketSizing.CONSTANT) {
             this.binScheme = new ConstantBinScheme(buckets, min, max);
         } else if (bucketing == BucketSizing.LINEAR) {
-            if (min != 0.0d)
+            if (min != 0.0d) {
                 throw new IllegalArgumentException("Linear bucket sizing requires min to be 0.0.");
+            }
             this.binScheme = new LinearBinScheme(buckets, max);
         } else {
             throw new IllegalArgumentException("Unknown bucket type: " + bucketing);
@@ -60,6 +61,7 @@ public class Percentiles extends SampledStat implements CompoundStat {
         for (Percentile percentile : this.percentiles) {
             final double pct = percentile.percentile();
             ms.add(new NamedMeasurable(percentile.name(), new Measurable() {
+                @Override
                 public double measure(MetricConfig config, long now) {
                     return value(config, now, pct / 100.0);
                 }
@@ -71,10 +73,12 @@ public class Percentiles extends SampledStat implements CompoundStat {
     public double value(MetricConfig config, long now, double quantile) {
         purgeObsoleteSamples(config, now);
         float count = 0.0f;
-        for (Sample sample : this.samples)
+        for (Sample sample : this.samples) {
             count += sample.eventCount;
-        if (count == 0.0f)
+        }
+        if (count == 0.0f) {
             return Double.NaN;
+        }
         float sum = 0.0f;
         float quant = (float) quantile;
         for (int b = 0; b < buckets; b++) {
@@ -82,13 +86,15 @@ public class Percentiles extends SampledStat implements CompoundStat {
                 HistogramSample sample = (HistogramSample) this.samples.get(s);
                 float[] hist = sample.histogram.counts();
                 sum += hist[b];
-                if (sum / count > quant)
+                if (sum / count > quant) {
                     return binScheme.fromBin(b);
+                }
             }
         }
         return Double.POSITIVE_INFINITY;
     }
 
+    @Override
     public double combine(List<Sample> samples, MetricConfig config, long now) {
         return value(config, now, 0.5);
     }

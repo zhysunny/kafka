@@ -42,14 +42,17 @@ public class AbstractConfig {
     @SuppressWarnings("unchecked")
     public AbstractConfig(ConfigDef definition, Map<?, ?> originals, Boolean doLog) {
         /* check that all the keys are really strings */
-        for (Object key : originals.keySet())
-            if (!(key instanceof String))
+        for (Object key : originals.keySet()) {
+            if (!(key instanceof String)) {
                 throw new ConfigException(key.toString(), originals.get(key), "Key must be a string.");
+            }
+        }
         this.originals = (Map<String, ?>) originals;
         this.values = definition.parse(this.originals);
         this.used = Collections.synchronizedSet(new HashSet<String>());
-        if (doLog)
+        if (doLog) {
             logAll();
+        }
     }
 
     public AbstractConfig(ConfigDef definition, Map<?, ?> originals) {
@@ -57,8 +60,9 @@ public class AbstractConfig {
     }
 
     protected Object get(String key) {
-        if (!values.containsKey(key))
+        if (!values.containsKey(key)) {
             throw new ConfigException(String.format("Unknown configuration '%s'", key));
+        }
         used.add(key);
         return values.get(key);
     }
@@ -124,8 +128,9 @@ public class AbstractConfig {
     public Map<String, String> originalsStrings() {
         Map<String, String> copy = new RecordingMap<>();
         for (Map.Entry<String, ?> entry : originals.entrySet()) {
-            if (!(entry.getValue() instanceof String))
+            if (!(entry.getValue() instanceof String)) {
                 throw new ClassCastException("Non-string value found in original settings");
+            }
             copy.put(entry.getKey(), (String) entry.getValue());
         }
         return copy;
@@ -140,8 +145,9 @@ public class AbstractConfig {
     public Map<String, Object> originalsWithPrefix(String prefix) {
         Map<String, Object> result = new RecordingMap<>();
         for (Map.Entry<String, ?> entry : originals.entrySet()) {
-            if (entry.getKey().startsWith(prefix) && entry.getKey().length() > prefix.length())
+            if (entry.getKey().startsWith(prefix) && entry.getKey().length() > prefix.length()) {
                 result.put(entry.getKey().substring(prefix.length()), entry.getValue());
+            }
         }
         return result;
     }
@@ -169,8 +175,9 @@ public class AbstractConfig {
      * Log warnings for any unused configurations
      */
     public void logUnused() {
-        for (String key : unused())
+        for (String key : unused()) {
             log.warn("The configuration {} = {} was supplied but isn't a known config.", key, this.originals.get(key));
+        }
     }
 
     /**
@@ -183,13 +190,16 @@ public class AbstractConfig {
      */
     public <T> T getConfiguredInstance(String key, Class<T> t) {
         Class<?> c = getClass(key);
-        if (c == null)
+        if (c == null) {
             return null;
+        }
         Object o = Utils.newInstance(c);
-        if (!t.isInstance(o))
+        if (!t.isInstance(o)) {
             throw new KafkaException(c.getName() + " is not an instance of " + t.getName());
-        if (o instanceof Configurable)
+        }
+        if (o instanceof Configurable) {
             ((Configurable) o).configure(this.originals);
+        }
         return t.cast(o);
     }
 
@@ -203,10 +213,12 @@ public class AbstractConfig {
             } catch (ClassNotFoundException e) {
                 throw new KafkaException(klass + " ClassNotFoundException exception occured", e);
             }
-            if (!t.isInstance(o))
+            if (!t.isInstance(o)) {
                 throw new KafkaException(klass + " is not an instance of " + t.getName());
-            if (o instanceof Configurable)
+            }
+            if (o instanceof Configurable) {
                 ((Configurable) o).configure(this.originals);
+            }
             objects.add(t.cast(o));
         }
         return objects;
@@ -214,8 +226,12 @@ public class AbstractConfig {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
         AbstractConfig that = (AbstractConfig) o;
 
@@ -241,8 +257,9 @@ public class AbstractConfig {
 
         @Override
         public V get(Object key) {
-            if (key instanceof String)
+            if (key instanceof String) {
                 ignore((String) key);
+            }
             return super.get(key);
         }
     }

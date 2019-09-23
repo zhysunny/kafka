@@ -28,19 +28,22 @@ public class StringSerializer implements Serializer<String> {
     public void configure(Map<String, ?> configs, boolean isKey) {
         String propertyName = isKey ? "key.serializer.encoding" : "value.serializer.encoding";
         Object encodingValue = configs.get(propertyName);
-        if (encodingValue == null)
+        if (encodingValue == null) {
             encodingValue = configs.get("serializer.encoding");
-        if (encodingValue != null && encodingValue instanceof String)
+        }
+        if (encodingValue != null && encodingValue instanceof String) {
             encoding = (String) encodingValue;
+        }
     }
 
     @Override
     public byte[] serialize(String topic, String data) {
         try {
-            if (data == null)
+            if (data == null) {
                 return null;
-            else
+            } else {
                 return data.getBytes(encoding);
+            }
         } catch (UnsupportedEncodingException e) {
             throw new SerializationException("Error when serializing string to byte[] due to unsupported encoding " + encoding);
         }

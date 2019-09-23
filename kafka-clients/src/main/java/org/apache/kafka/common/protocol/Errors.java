@@ -103,8 +103,9 @@ public enum Errors {
     static {
         for (Errors error : Errors.values()) {
             codeToError.put(error.code(), error);
-            if (error.exception != null)
+            if (error.exception != null) {
                 classToError.put(error.exception.getClass(), error);
+            }
         }
     }
 

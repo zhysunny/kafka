@@ -140,8 +140,9 @@ public class ConsumerNetworkClient implements Closeable {
      * until it has completed).
      */
     public void ensureFreshMetadata() {
-        if (this.metadata.timeToNextUpdate(time.milliseconds()) == 0)
+        if (this.metadata.timeToNextUpdate(time.milliseconds()) == 0) {
             awaitMetadataUpdate();
+        }
     }
 
     /**
@@ -159,8 +160,9 @@ public class ConsumerNetworkClient implements Closeable {
      * @throws WakeupException if {@link #wakeup()} is called from another thread
      */
     public void poll(RequestFuture<?> future) {
-        while (!future.isDone())
+        while (!future.isDone()) {
             poll(Long.MAX_VALUE);
+        }
     }
 
     /**
@@ -219,8 +221,9 @@ public class ConsumerNetworkClient implements Closeable {
         checkDisconnects(now);
 
         // execute scheduled tasks
-        if (executeDelayedTasks)
+        if (executeDelayedTasks) {
             delayedTasks.poll(now);
+        }
 
         // try again to send requests since buffer space may have been
         // cleared or a connect finished in the poll
@@ -235,8 +238,9 @@ public class ConsumerNetworkClient implements Closeable {
      * @param node The node to await requests from
      */
     public void awaitPendingRequests(Node node) {
-        while (pendingRequestCount(node) > 0)
+        while (pendingRequestCount(node) > 0) {
             poll(retryBackoffMs);
+        }
     }
 
     /**
@@ -258,8 +262,9 @@ public class ConsumerNetworkClient implements Closeable {
      */
     public int pendingRequestCount() {
         int total = 0;
-        for (List<ClientRequest> requests: unsent.values())
+        for (List<ClientRequest> requests: unsent.values()) {
             total += requests.size();
+        }
         return total + client.inFlightRequestCount();
     }
 
@@ -334,8 +339,9 @@ public class ConsumerNetworkClient implements Closeable {
 
         // re-wakeup the client if the flag was set since previous wake-up call
         // could be cleared by poll(0) while wakeups were disabled
-        if (wakeup.get())
+        if (wakeup.get()) {
             this.client.wakeup();
+        }
     }
 
     @Override

@@ -696,14 +696,18 @@ public class Protocol {
         RESPONSES[ApiKeys.LIST_GROUPS.id] = LIST_GROUPS_RESPONSE;
 
         /* set the maximum version of each api */
-        for (ApiKeys api : ApiKeys.values())
+        for (ApiKeys api : ApiKeys.values()) {
             CURR_VERSION[api.id] = (short) (REQUESTS[api.id].length - 1);
+        }
 
         /* sanity check that we have the same number of request and response versions for each api */
-        for (ApiKeys api : ApiKeys.values())
-            if (REQUESTS[api.id].length != RESPONSES[api.id].length)
-                throw new IllegalStateException(REQUESTS[api.id].length + " request versions for api " + api.name
-                        + " but " + RESPONSES[api.id].length + " response versions.");
+        for (ApiKeys api : ApiKeys.values()) {
+            if (REQUESTS[api.id].length != RESPONSES[api.id].length) {
+                throw new IllegalStateException(
+                REQUESTS[api.id].length + " request versions for api " + api.name + " but " + RESPONSES[api.id].length
+                + " response versions.");
+            }
+        }
     }
 
 }

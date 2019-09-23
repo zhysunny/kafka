@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -18,8 +18,8 @@
 package org.apache.kafka.common.cache;
 
 /**
- * Interface for caches, semi-peristent maps which store key-value mappings until either an eviction criteria is met
- * or the entries are manually invalidated. Caches are not required to be thread-safe, but some implementations may be.
+ * 用于缓存的接口、半支架映射，它存储键值映射，直到满足清除条件或条目手动失效。
+ * 缓存不需要是线程安全的，但是一些实现可能是线程安全的。
  */
 public interface Cache<K, V> {
 
@@ -32,7 +32,7 @@ public interface Cache<K, V> {
 
     /**
      * Insert an entry into the cache.
-     * @param key the key to insert
+     * @param key   the key to insert
      * @param value the value to insert
      */
     void put(K key, V value);
@@ -50,4 +50,5 @@ public interface Cache<K, V> {
      * @return the number of entries in the cache
      */
     long size();
+
 }

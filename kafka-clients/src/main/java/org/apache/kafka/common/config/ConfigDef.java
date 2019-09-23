@@ -73,8 +73,9 @@ public class ConfigDef {
      * @return This ConfigDef so you can chain calls
      */
     public ConfigDef define(String name, Type type, Object defaultValue, Validator validator, Importance importance, String documentation) {
-        if (configKeys.containsKey(name))
+        if (configKeys.containsKey(name)) {
             throw new ConfigException("Configuration " + name + " is defined twice.");
+        }
         Object parsedDefault = defaultValue == NO_DEFAULT_VALUE ? NO_DEFAULT_VALUE : parseType(name, defaultValue, type);
         configKeys.put(name, new ConfigKey(name, type, parsedDefault, validator, importance, documentation));
         return this;
@@ -141,16 +142,20 @@ public class ConfigDef {
         for (ConfigKey key : configKeys.values()) {
             Object value;
             // props map contains setting - assign ConfigKey value
-            if (props.containsKey(key.name))
+            if (props.containsKey(key.name)) {
                 value = parseType(key.name, props.get(key.name), key.type);
+            }
             // props map doesn't contain setting, the key is required because no default value specified - its an error
-            else if (key.defaultValue == NO_DEFAULT_VALUE)
+            else if (key.defaultValue == NO_DEFAULT_VALUE) {
                 throw new ConfigException("Missing required configuration \"" + key.name + "\" which has no default value.");
+            }
             // otherwise assign setting its default value
-            else
+            else {
                 value = key.defaultValue;
-            if (key.validator != null)
+            }
+            if (key.validator != null) {
                 key.validator.ensureValid(key.name, value);
+            }
             values.put(key.name, value);
         }
         return values;
@@ -166,37 +171,44 @@ public class ConfigDef {
      */
     private Object parseType(String name, Object value, Type type) {
         try {
-            if (value == null) return null;
+            if (value == null) {
+                return null;
+            }
 
             String trimmed = null;
-            if (value instanceof String)
+            if (value instanceof String) {
                 trimmed = ((String) value).trim();
+            }
 
             switch (type) {
                 case BOOLEAN:
                     if (value instanceof String) {
-                        if (trimmed.equalsIgnoreCase("true"))
+                        if ("true".equalsIgnoreCase(trimmed)) {
                             return true;
-                        else if (trimmed.equalsIgnoreCase("false"))
+                        } else if ("false".equalsIgnoreCase(trimmed)) {
                             return false;
-                        else
+                        } else {
                             throw new ConfigException(name, value, "Expected value to be either true or false");
-                    } else if (value instanceof Boolean)
+                        }
+                    } else if (value instanceof Boolean) {
                         return value;
-                    else
+                    } else {
                         throw new ConfigException(name, value, "Expected value to be either true or false");
+                    }
                 case PASSWORD:
-                    if (value instanceof Password)
+                    if (value instanceof Password) {
                         return value;
-                    else if (value instanceof String)
+                    } else if (value instanceof String) {
                         return new Password(trimmed);
-                    else
+                    } else {
                         throw new ConfigException(name, value, "Expected value to be a string, but it was a " + value.getClass().getName());
+                    }
                 case STRING:
-                    if (value instanceof String)
+                    if (value instanceof String) {
                         return trimmed;
-                    else
+                    } else {
                         throw new ConfigException(name, value, "Expected value to be a string, but it was a " + value.getClass().getName());
+                    }
                 case INT:
                     if (value instanceof Integer) {
                         return (Integer) value;
@@ -214,38 +226,44 @@ public class ConfigDef {
                         throw new ConfigException(name, value, "Expected value to be an number.");
                     }
                 case LONG:
-                    if (value instanceof Integer)
+                    if (value instanceof Integer) {
                         return ((Integer) value).longValue();
-                    if (value instanceof Long)
+                    }
+                    if (value instanceof Long) {
                         return (Long) value;
-                    else if (value instanceof String)
+                    } else if (value instanceof String) {
                         return Long.parseLong(trimmed);
-                    else
+                    } else {
                         throw new ConfigException(name, value, "Expected value to be an number.");
+                    }
                 case DOUBLE:
-                    if (value instanceof Number)
+                    if (value instanceof Number) {
                         return ((Number) value).doubleValue();
-                    else if (value instanceof String)
+                    } else if (value instanceof String) {
                         return Double.parseDouble(trimmed);
-                    else
+                    } else {
                         throw new ConfigException(name, value, "Expected value to be an number.");
+                    }
                 case LIST:
-                    if (value instanceof List)
+                    if (value instanceof List) {
                         return (List<?>) value;
-                    else if (value instanceof String)
-                        if (trimmed.isEmpty())
+                    } else if (value instanceof String) {
+                        if (trimmed.isEmpty()) {
                             return Collections.emptyList();
-                        else
+                        } else {
                             return Arrays.asList(trimmed.split("\\s*,\\s*", -1));
-                    else
+                        }
+                    } else {
                         throw new ConfigException(name, value, "Expected a comma separated list.");
+                    }
                 case CLASS:
-                    if (value instanceof Class)
+                    if (value instanceof Class) {
                         return (Class<?>) value;
-                    else if (value instanceof String)
+                    } else if (value instanceof String) {
                         return Class.forName(trimmed, true, Utils.getContextOrKafkaClassLoader());
-                    else
+                    } else {
                         throw new ConfigException(name, value, "Expected a Class instance or class name.");
+                    }
                 default:
                     throw new IllegalStateException("Unknown type.");
             }
@@ -302,21 +320,26 @@ public class ConfigDef {
             return new Range(min, max);
         }
 
+        @Override
         public void ensureValid(String name, Object o) {
             Number n = (Number) o;
-            if (min != null && n.doubleValue() < min.doubleValue())
+            if (min != null && n.doubleValue() < min.doubleValue()) {
                 throw new ConfigException(name, o, "Value must be at least " + min);
-            if (max != null && n.doubleValue() > max.doubleValue())
+            }
+            if (max != null && n.doubleValue() > max.doubleValue()) {
                 throw new ConfigException(name, o, "Value must be no more than " + max);
+            }
         }
 
+        @Override
         public String toString() {
-            if (min == null)
+            if (min == null) {
                 return "[...," + max + "]";
-            else if (max == null)
+            } else if (max == null) {
                 return "[" + min + ",...]";
-            else
+            } else {
                 return "[" + min + ",...," + max + "]";
+            }
         }
     }
 
@@ -340,6 +363,7 @@ public class ConfigDef {
 
         }
 
+        @Override
         public String toString() {
             return "[" + Utils.join(validStrings, ", ") + "]";
         }
@@ -360,8 +384,9 @@ public class ConfigDef {
             this.defaultValue = defaultValue;
             this.validator = validator;
             this.importance = importance;
-            if (this.validator != null)
+            if (this.validator != null) {
                 this.validator.ensureValid(name, defaultValue);
+            }
             this.documentation = documentation;
         }
 
@@ -375,20 +400,24 @@ public class ConfigDef {
         // sort first required fields, then by importance, then name
         List<ConfigDef.ConfigKey> configs = new ArrayList<ConfigDef.ConfigKey>(this.configKeys.values());
         Collections.sort(configs, new Comparator<ConfigDef.ConfigKey>() {
+            @Override
             public int compare(ConfigDef.ConfigKey k1, ConfigDef.ConfigKey k2) {
                 // first take anything with no default value (therefore required)
-                if (!k1.hasDefault() && k2.hasDefault())
+                if (!k1.hasDefault() && k2.hasDefault()) {
                     return -1;
-                else if (!k2.hasDefault() && k1.hasDefault())
+                } else if (!k2.hasDefault() && k1.hasDefault()) {
                     return 1;
+                }
 
                 // then sort by importance
                 int cmp = k1.importance.compareTo(k2.importance);
                 if (cmp == 0)
                     // then sort in alphabetical order
+                {
                     return k1.name.compareTo(k2.name);
-                else
+                } else {
                     return cmp;
+                }
             }
         });
         StringBuilder b = new StringBuilder();
@@ -414,14 +443,16 @@ public class ConfigDef {
             b.append("</td>");
             b.append("<td>");
             if (def.hasDefault()) {
-                if (def.defaultValue == null)
+                if (def.defaultValue == null) {
                     b.append("null");
-                else if (def.type == Type.STRING && def.defaultValue.toString().isEmpty())
+                } else if (def.type == Type.STRING && def.defaultValue.toString().isEmpty()) {
                     b.append("\"\"");
-                else
+                } else {
                     b.append(def.defaultValue);
-            } else
+                }
+            } else {
                 b.append("");
+            }
             b.append("</td>");
             b.append("<td>");
             b.append(def.validator != null ? def.validator.toString() : "");

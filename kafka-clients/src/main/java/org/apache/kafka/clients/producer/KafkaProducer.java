@@ -207,8 +207,9 @@ public class KafkaProducer<K, V> implements Producer<K, V> {
                     .timeWindow(config.getLong(ProducerConfig.METRICS_SAMPLE_WINDOW_MS_CONFIG),
                             TimeUnit.MILLISECONDS);
             clientId = config.getString(ProducerConfig.CLIENT_ID_CONFIG);
-            if (clientId.length() <= 0)
+            if (clientId.length() <= 0) {
                 clientId = "producer-" + PRODUCER_CLIENT_ID_SEQUENCE.getAndIncrement();
+            }
             List<MetricsReporter> reporters = config.getConfiguredInstances(ProducerConfig.METRIC_REPORTER_CLASSES_CONFIG,
                     MetricsReporter.class);
             reporters.add(new JmxReporter(JMX_PREFIX));
@@ -324,7 +325,7 @@ public class KafkaProducer<K, V> implements Producer<K, V> {
 
     private static int parseAcks(String acksString) {
         try {
-            return acksString.trim().toLowerCase().equals("all") ? -1 : Integer.parseInt(acksString.trim());
+            return "all".equals(acksString.trim().toLowerCase()) ? -1 : Integer.parseInt(acksString.trim());
         } catch (NumberFormatException e) {
             throw new ConfigException("Invalid configuration value for 'acks': " + acksString);
         }
@@ -443,8 +444,9 @@ public class KafkaProducer<K, V> implements Producer<K, V> {
             // for other exceptions throw directly
         } catch (ApiException e) {
             log.debug("Exception occurred during message send:", e);
-            if (callback != null)
+            if (callback != null) {
                 callback.onCompletion(null, e);
+            }
             this.errors.record();
             return new FutureFailure(e);
         } catch (InterruptedException e) {
@@ -468,11 +470,13 @@ public class KafkaProducer<K, V> implements Producer<K, V> {
      */
     private long waitOnMetadata(String topic, long maxWaitMs) throws InterruptedException {
         // add topic to metadata topic list if it is not there already.
-        if (!this.metadata.containsTopic(topic))
+        if (!this.metadata.containsTopic(topic)) {
             this.metadata.add(topic);
+        }
 
-        if (metadata.fetch().partitionsForTopic(topic) != null)
+        if (metadata.fetch().partitionsForTopic(topic) != null) {
             return 0;
+        }
 
         long begin = time.milliseconds();
         long remainingWaitMs = maxWaitMs;
@@ -482,10 +486,12 @@ public class KafkaProducer<K, V> implements Producer<K, V> {
             sender.wakeup();
             metadata.awaitUpdate(version, remainingWaitMs);
             long elapsed = time.milliseconds() - begin;
-            if (elapsed >= maxWaitMs)
+            if (elapsed >= maxWaitMs) {
                 throw new TimeoutException("Failed to update metadata after " + maxWaitMs + " ms.");
-            if (metadata.fetch().unauthorizedTopics().contains(topic))
+            }
+            if (metadata.fetch().unauthorizedTopics().contains(topic)) {
                 throw new TopicAuthorizationException(topic);
+            }
             remainingWaitMs = maxWaitMs - elapsed;
         }
         return time.milliseconds() - begin;
@@ -495,16 +501,18 @@ public class KafkaProducer<K, V> implements Producer<K, V> {
      * Validate that the record size isn't too large
      */
     private void ensureValidRecordSize(int size) {
-        if (size > this.maxRequestSize)
+        if (size > this.maxRequestSize) {
             throw new RecordTooLargeException("The message is " + size +
                                               " bytes when serialized which is larger than the maximum request size you have configured with the " +
                                               ProducerConfig.MAX_REQUEST_SIZE_CONFIG +
                                               " configuration.");
-        if (size > this.totalMemorySize)
+        }
+        if (size > this.totalMemorySize) {
             throw new RecordTooLargeException("The message is " + size +
                                               " bytes when serialized which is larger than the total memory buffer you have configured with the " +
                                               ProducerConfig.BUFFER_MEMORY_CONFIG +
                                               " configuration.");
+        }
     }
 
     /**
@@ -607,8 +615,9 @@ public class KafkaProducer<K, V> implements Producer<K, V> {
     }
 
     private void close(long timeout, TimeUnit timeUnit, boolean swallowException) {
-        if (timeout < 0)
+        if (timeout < 0) {
             throw new IllegalArgumentException("The timeout cannot be negative.");
+        }
 
         log.info("Closing the Kafka producer with timeoutMillis = {} ms.", timeUnit.toMillis(timeout));
         // this will keep track of the first encountered exception
@@ -620,8 +629,9 @@ public class KafkaProducer<K, V> implements Producer<K, V> {
                     "This means you have incorrectly invoked close with a non-zero timeout from the producer call-back.", timeout);
             } else {
                 // Try to close gracefully.
-                if (this.sender != null)
+                if (this.sender != null) {
                     this.sender.initiateClose();
+                }
                 if (this.ioThread != null) {
                     try {
                         this.ioThread.join(timeUnit.toMillis(timeout));
@@ -652,8 +662,9 @@ public class KafkaProducer<K, V> implements Producer<K, V> {
         ClientUtils.closeQuietly(valueSerializer, "producer valueSerializer", firstException);
         AppInfoParser.unregisterAppInfo(JMX_PREFIX, clientId);
         log.debug("The Kafka producer has closed.");
-        if (firstException.get() != null && !swallowException)
+        if (firstException.get() != null && !swallowException) {
             throw new KafkaException("Failed to close kafka producer", firstException.get());
+        }
     }
 
     /**
@@ -667,11 +678,12 @@ public class KafkaProducer<K, V> implements Producer<K, V> {
             List<PartitionInfo> partitions = cluster.partitionsForTopic(record.topic());
             int numPartitions = partitions.size();
             // they have given us a partition, use it
-            if (partition < 0 || partition >= numPartitions)
+            if (partition < 0 || partition >= numPartitions) {
                 throw new IllegalArgumentException("Invalid partition given with record: " + partition
                                                    + " is not in the range [0..."
                                                    + numPartitions
                                                    + "].");
+            }
             return partition;
         }
         return this.partitioner.partition(record.topic(), record.key(), serializedKey, record.value(), serializedValue,

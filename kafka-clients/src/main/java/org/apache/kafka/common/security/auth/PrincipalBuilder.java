@@ -35,6 +35,7 @@ public interface PrincipalBuilder extends Configurable {
     /**
      * Configures this class with given key-value pairs.
      */
+    @Override
     void configure(Map<String, ?> configs);
 
     /**

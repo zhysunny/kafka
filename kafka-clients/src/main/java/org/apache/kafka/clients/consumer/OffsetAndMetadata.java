@@ -29,8 +29,9 @@ public class OffsetAndMetadata implements Serializable {
      * @param metadata Non-null metadata
      */
     public OffsetAndMetadata(long offset, String metadata) {
-        if (metadata == null)
+        if (metadata == null) {
             throw new IllegalArgumentException("Metadata cannot be null");
+        }
 
         this.offset = offset;
         this.metadata = metadata;
@@ -55,12 +56,18 @@ public class OffsetAndMetadata implements Serializable {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
         OffsetAndMetadata that = (OffsetAndMetadata) o;
 
-        if (offset != that.offset) return false;
+        if (offset != that.offset) {
+            return false;
+        }
         return metadata == null ? that.metadata == null : metadata.equals(that.metadata);
 
     }

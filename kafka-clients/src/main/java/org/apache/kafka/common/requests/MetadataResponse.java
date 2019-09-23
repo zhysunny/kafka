@@ -113,12 +113,14 @@ public class MetadataResponse extends AbstractRequestResponse {
                     partitionData.set(PARTITION_KEY_NAME, fetchPartitionData.partition());
                     partitionData.set(LEADER_KEY_NAME, fetchPartitionData.leader().id());
                     ArrayList<Integer> replicas = new ArrayList<Integer>();
-                    for (Node node : fetchPartitionData.replicas())
+                    for (Node node : fetchPartitionData.replicas()) {
                         replicas.add(node.id());
+                    }
                     partitionData.set(REPLICAS_KEY_NAME, replicas.toArray());
                     ArrayList<Integer> isr = new ArrayList<Integer>();
-                    for (Node node : fetchPartitionData.inSyncReplicas())
+                    for (Node node : fetchPartitionData.inSyncReplicas()) {
                         isr.add(node.id());
+                    }
                     partitionData.set(ISR_KEY_NAME, isr.toArray());
                     partitionArray.add(partitionData);
                 }
@@ -159,12 +161,14 @@ public class MetadataResponse extends AbstractRequestResponse {
                     Node leaderNode = leader == -1 ? null : brokers.get(leader);
                     Object[] replicas = (Object[]) partitionInfo.get(REPLICAS_KEY_NAME);
                     Node[] replicaNodes = new Node[replicas.length];
-                    for (int k = 0; k < replicas.length; k++)
+                    for (int k = 0; k < replicas.length; k++) {
                         replicaNodes[k] = brokers.get(replicas[k]);
+                    }
                     Object[] isr = (Object[]) partitionInfo.get(ISR_KEY_NAME);
                     Node[] isrNodes = new Node[isr.length];
-                    for (int k = 0; k < isr.length; k++)
+                    for (int k = 0; k < isr.length; k++) {
                         isrNodes[k] = brokers.get(isr[k]);
+                    }
                     partitions.add(new PartitionInfo(topic, partition, leaderNode, replicaNodes, isrNodes));
                 }
             } else {
@@ -177,13 +181,15 @@ public class MetadataResponse extends AbstractRequestResponse {
     }
 
     private Set<String> unauthorizedTopics(Map<String, Errors> topicErrors) {
-        if (topicErrors.isEmpty())
+        if (topicErrors.isEmpty()) {
             return Collections.emptySet();
+        }
 
         Set<String> unauthorizedTopics = new HashSet<>();
         for (Map.Entry<String, Errors> topicErrorEntry : topicErrors.entrySet()) {
-            if (topicErrorEntry.getValue() == Errors.TOPIC_AUTHORIZATION_FAILED)
+            if (topicErrorEntry.getValue() == Errors.TOPIC_AUTHORIZATION_FAILED) {
                 unauthorizedTopics.add(topicErrorEntry.getKey());
+            }
         }
         return unauthorizedTopics;
     }

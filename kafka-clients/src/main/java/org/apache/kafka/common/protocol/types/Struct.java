@@ -47,14 +47,15 @@ public class Struct {
      */
     private Object getFieldOrDefault(Field field) {
         Object value = this.values[field.index];
-        if (value != null)
+        if (value != null) {
             return value;
-        else if (field.defaultValue != Field.NO_DEFAULT)
+        } else if (field.defaultValue != Field.NO_DEFAULT) {
             return field.defaultValue;
-        else if (field.type.isNullable())
+        } else if (field.type.isNullable()) {
             return null;
-        else
+        } else {
             throw new SchemaException("Missing value for field '" + field.name + "' which has no default value.");
+        }
     }
 
     /**
@@ -78,8 +79,9 @@ public class Struct {
      */
     public Object get(String name) {
         Field field = schema.get(name);
-        if (field == null)
+        if (field == null) {
             throw new SchemaException("No such field: " + name);
+        }
         return getFieldOrDefault(field);
     }
 
@@ -150,15 +152,17 @@ public class Struct {
 
     public ByteBuffer getBytes(Field field) {
         Object result = get(field);
-        if (result instanceof byte[])
+        if (result instanceof byte[]) {
             return ByteBuffer.wrap((byte[]) result);
+        }
         return (ByteBuffer) result;
     }
 
     public ByteBuffer getBytes(String name) {
         Object result = get(name);
-        if (result instanceof byte[])
+        if (result instanceof byte[]) {
             return ByteBuffer.wrap((byte[]) result);
+        }
         return (ByteBuffer) result;
     }
 
@@ -184,8 +188,9 @@ public class Struct {
      */
     public Struct set(String name, Object value) {
         Field field = this.schema.get(name);
-        if (field == null)
+        if (field == null) {
             throw new SchemaException("Unknown field: " + name);
+        }
         this.values[field.index] = value;
         return this;
     }
@@ -249,10 +254,12 @@ public class Struct {
      * @throws SchemaException If validation fails
      */
     private void validateField(Field field) {
-        if (this.schema != field.schema)
+        if (this.schema != field.schema) {
             throw new SchemaException("Attempt to access field '" + field.name + "' from a different schema instance.");
-        if (field.index > values.length)
+        }
+        if (field.index > values.length) {
             throw new SchemaException("Invalid field index: " + field.index);
+        }
     }
 
     /**
@@ -287,14 +294,17 @@ public class Struct {
                 b.append('[');
                 for (int j = 0; j < arrayValue.length; j++) {
                     b.append(arrayValue[j]);
-                    if (j < arrayValue.length - 1)
+                    if (j < arrayValue.length - 1) {
                         b.append(',');
+                    }
                 }
                 b.append(']');
-            } else
+            } else {
                 b.append(this.values[i]);
-            if (i < this.values.length - 1)
+            }
+            if (i < this.values.length - 1) {
                 b.append(',');
+            }
         }
         b.append('}');
         return b.toString();
@@ -308,8 +318,9 @@ public class Struct {
             Field f = this.schema.get(i);
             if (f.type() instanceof ArrayOf) {
                 Object[] arrayObject = (Object[]) this.get(f);
-                for (Object arrayItem : arrayObject)
+                for (Object arrayItem : arrayObject) {
                     result = prime * result + arrayItem.hashCode();
+                }
             } else {
                 result = prime * result + this.get(f).hashCode();
             }
@@ -319,15 +330,19 @@ public class Struct {
 
     @Override
     public boolean equals(Object obj) {
-        if (this == obj)
+        if (this == obj) {
             return true;
-        if (obj == null)
+        }
+        if (obj == null) {
             return false;
-        if (getClass() != obj.getClass())
+        }
+        if (getClass() != obj.getClass()) {
             return false;
+        }
         Struct other = (Struct) obj;
-        if (schema != other.schema)
+        if (schema != other.schema) {
             return false;
+        }
         for (int i = 0; i < this.values.length; i++) {
             Field f = this.schema.get(i);
             Boolean result;
@@ -336,8 +351,9 @@ public class Struct {
             } else {
                 result = this.get(f).equals(other.get(f));
             }
-            if (!result)
+            if (!result) {
                 return false;
+            }
         }
         return true;
     }

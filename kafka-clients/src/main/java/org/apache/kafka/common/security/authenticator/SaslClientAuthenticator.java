@@ -82,6 +82,7 @@ public class SaslClientAuthenticator implements Authenticator {
         this.servicePrincipal = servicePrincipal;
     }
 
+    @Override
     public void configure(TransportLayer transportLayer, PrincipalBuilder principalBuilder, Map<String, ?> configs) throws KafkaException {
         try {
             this.transportLayer = transportLayer;
@@ -98,6 +99,7 @@ public class SaslClientAuthenticator implements Authenticator {
     private SaslClient createSaslClient() {
         try {
             return Subject.doAs(subject, new PrivilegedExceptionAction<SaslClient>() {
+                @Override
                 public SaslClient run() throws SaslException {
                     String[] mechs = {"GSSAPI"};
                     LOG.debug("Creating SaslClient: client={};service={};serviceHostname={};mechs={}",
@@ -118,9 +120,11 @@ public class SaslClientAuthenticator implements Authenticator {
      * The messages are sent and received as size delimited bytes that consists of a 4 byte network-ordered size N
      * followed by N bytes representing the opaque payload.
      */
+    @Override
     public void authenticate() throws IOException {
-        if (netOutBuffer != null && !flushNetOutBufferAndUpdateInterestOps())
+        if (netOutBuffer != null && !flushNetOutBufferAndUpdateInterestOps()) {
             return;
+        }
 
         switch (saslState) {
             case INITIAL:
@@ -128,7 +132,9 @@ public class SaslClientAuthenticator implements Authenticator {
                 saslState = SaslState.INTERMEDIATE;
                 break;
             case INTERMEDIATE:
-                if (netInBuffer == null) netInBuffer = new NetworkReceive(node);
+                if (netInBuffer == null) {
+                    netInBuffer = new NetworkReceive(node);
+                }
                 netInBuffer.readFrom(transportLayer);
                 if (netInBuffer.complete()) {
                     netInBuffer.payload().rewind();
@@ -166,31 +172,37 @@ public class SaslClientAuthenticator implements Authenticator {
 
     private boolean flushNetOutBufferAndUpdateInterestOps() throws IOException {
         boolean flushedCompletely = flushNetOutBuffer();
-        if (flushedCompletely)
+        if (flushedCompletely) {
             transportLayer.removeInterestOps(SelectionKey.OP_WRITE);
-        else
+        } else {
             transportLayer.addInterestOps(SelectionKey.OP_WRITE);
+        }
         return flushedCompletely;
     }
 
+    @Override
     public Principal principal() {
         return new KafkaPrincipal(KafkaPrincipal.USER_TYPE, clientPrincipalName);
     }
 
+    @Override
     public boolean complete() {
         return saslState == SaslState.COMPLETE;
     }
 
+    @Override
     public void close() throws IOException {
         saslClient.dispose();
     }
 
     private byte[] createSaslToken(final byte[] saslToken) throws SaslException {
-        if (saslToken == null)
+        if (saslToken == null) {
             throw new SaslException("Error authenticating with the Kafka Broker: received a `null` saslToken.");
+        }
 
         try {
             return Subject.doAs(subject, new PrivilegedExceptionAction<byte[]>() {
+                @Override
                 public byte[] run() throws SaslException {
                     return saslClient.evaluateChallenge(saslToken);
                 }
@@ -223,6 +235,7 @@ public class SaslClientAuthenticator implements Authenticator {
 
     public static class ClientCallbackHandler implements CallbackHandler {
 
+        @Override
         public void handle(Callback[] callbacks) throws UnsupportedCallbackException {
             for (Callback callback : callbacks) {
                 if (callback instanceof NameCallback) {
@@ -244,8 +257,9 @@ public class SaslClientAuthenticator implements Authenticator {
                     String authId = ac.getAuthenticationID();
                     String authzId = ac.getAuthorizationID();
                     ac.setAuthorized(authId.equals(authzId));
-                    if (ac.isAuthorized())
+                    if (ac.isAuthorized()) {
                         ac.setAuthorizedID(authzId);
+                    }
                 } else {
                     throw new UnsupportedCallbackException(callback, "Unrecognized SASL ClientCallback");
                 }

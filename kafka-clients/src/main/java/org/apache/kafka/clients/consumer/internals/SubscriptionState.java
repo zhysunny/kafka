@@ -90,11 +90,13 @@ public class SubscriptionState {
     }
 
     public void subscribe(List<String> topics, ConsumerRebalanceListener listener) {
-        if (listener == null)
+        if (listener == null) {
             throw new IllegalArgumentException("RebalanceListener cannot be null");
+        }
 
-        if (!this.userAssignment.isEmpty() || this.subscribedPattern != null)
+        if (!this.userAssignment.isEmpty() || this.subscribedPattern != null) {
             throw new IllegalStateException(SUBSCRIPTION_EXCEPTION_MESSAGE);
+        }
 
         this.listener = listener;
 
@@ -111,8 +113,9 @@ public class SubscriptionState {
             // Remove any assigned partitions which are no longer subscribed to
             for (Iterator<TopicPartition> it = assignment.keySet().iterator(); it.hasNext(); ) {
                 TopicPartition tp = it.next();
-                if (!subscription.contains(tp.topic()))
+                if (!subscription.contains(tp.topic())) {
                     it.remove();
+                }
             }
         }
     }
@@ -123,8 +126,9 @@ public class SubscriptionState {
      * @param topics The topics to add to the group subscription
      */
     public void groupSubscribe(Collection<String> topics) {
-        if (!this.userAssignment.isEmpty())
+        if (!this.userAssignment.isEmpty()) {
             throw new IllegalStateException(SUBSCRIPTION_EXCEPTION_MESSAGE);
+        }
         this.groupSubscription.addAll(topics);
     }
 
@@ -139,15 +143,18 @@ public class SubscriptionState {
      * whose input partitions are provided from the subscribed topics.
      */
     public void assignFromUser(Collection<TopicPartition> partitions) {
-        if (!this.subscription.isEmpty() || this.subscribedPattern != null)
+        if (!this.subscription.isEmpty() || this.subscribedPattern != null) {
             throw new IllegalStateException(SUBSCRIPTION_EXCEPTION_MESSAGE);
+        }
 
         this.userAssignment.clear();
         this.userAssignment.addAll(partitions);
 
-        for (TopicPartition partition : partitions)
-            if (!assignment.containsKey(partition))
+        for (TopicPartition partition : partitions) {
+            if (!assignment.containsKey(partition)) {
                 addAssignedPartition(partition);
+            }
+        }
 
         this.assignment.keySet().retainAll(this.userAssignment);
 
@@ -159,21 +166,26 @@ public class SubscriptionState {
      * note this is different from {@link #assignFromUser(Collection)} which directly set the assignment from user inputs
      */
     public void assignFromSubscribed(Collection<TopicPartition> assignments) {
-        for (TopicPartition tp : assignments)
-            if (!this.subscription.contains(tp.topic()))
+        for (TopicPartition tp : assignments) {
+            if (!this.subscription.contains(tp.topic())) {
                 throw new IllegalArgumentException("Assigned partition " + tp + " for non-subscribed topic.");
+            }
+        }
         this.assignment.clear();
-        for (TopicPartition tp: assignments)
+        for (TopicPartition tp: assignments) {
             addAssignedPartition(tp);
+        }
         this.needsPartitionAssignment = false;
     }
 
     public void subscribe(Pattern pattern, ConsumerRebalanceListener listener) {
-        if (listener == null)
+        if (listener == null) {
             throw new IllegalArgumentException("RebalanceListener cannot be null");
+        }
 
-        if (!this.subscription.isEmpty() || !this.userAssignment.isEmpty())
+        if (!this.subscription.isEmpty() || !this.userAssignment.isEmpty()) {
             throw new IllegalStateException(SUBSCRIPTION_EXCEPTION_MESSAGE);
+        }
 
         this.listener = listener;
         this.subscribedPattern = pattern;
@@ -216,8 +228,9 @@ public class SubscriptionState {
 
     private TopicPartitionState assignedState(TopicPartition tp) {
         TopicPartitionState state = this.assignment.get(tp);
-        if (state == null)
+        if (state == null) {
             throw new IllegalStateException("No current assignment for partition " + tp);
+        }
         return state;
     }
 
@@ -252,8 +265,9 @@ public class SubscriptionState {
     public Set<TopicPartition> fetchablePartitions() {
         Set<TopicPartition> fetchable = new HashSet<>();
         for (Map.Entry<TopicPartition, TopicPartitionState> entry : assignment.entrySet()) {
-            if (entry.getValue().isFetchable())
+            if (entry.getValue().isFetchable()) {
                 fetchable.add(entry.getKey());
+            }
         }
         return fetchable;
     }
@@ -274,8 +288,9 @@ public class SubscriptionState {
         Map<TopicPartition, OffsetAndMetadata> allConsumed = new HashMap<>();
         for (Map.Entry<TopicPartition, TopicPartitionState> entry : assignment.entrySet()) {
             TopicPartitionState state = entry.getValue();
-            if (state.hasValidPosition)
+            if (state.hasValidPosition) {
                 allConsumed.put(entry.getKey(), new OffsetAndMetadata(state.position));
+            }
         }
         return allConsumed;
     }
@@ -301,17 +316,21 @@ public class SubscriptionState {
     }
 
     public boolean hasAllFetchPositions() {
-        for (TopicPartitionState state : assignment.values())
-            if (!state.hasValidPosition)
+        for (TopicPartitionState state : assignment.values()) {
+            if (!state.hasValidPosition) {
                 return false;
+            }
+        }
         return true;
     }
 
     public Set<TopicPartition> missingFetchPositions() {
         Set<TopicPartition> missing = new HashSet<>();
-        for (Map.Entry<TopicPartition, TopicPartitionState> entry : assignment.entrySet())
-            if (!entry.getValue().hasValidPosition)
+        for (Map.Entry<TopicPartition, TopicPartitionState> entry : assignment.entrySet()) {
+            if (!entry.getValue().hasValidPosition) {
                 missing.add(entry.getKey());
+            }
+        }
         return missing;
     }
 
@@ -380,8 +399,9 @@ public class SubscriptionState {
         }
 
         private void position(long offset) {
-            if (!hasValidPosition)
+            if (!hasValidPosition) {
                 throw new IllegalStateException("Cannot update fetch position without valid consumed/fetched positions");
+            }
             this.position = offset;
         }
 

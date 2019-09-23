@@ -19,33 +19,33 @@ package kafka
 
 import java.util.Properties
 
-import joptsimple.OptionParser
+import joptsimple.{ArgumentAcceptingOptionSpec, OptionParser}
 import kafka.server.{KafkaServer, KafkaServerStartable}
 import kafka.utils.{CommandLineUtils, Logging}
 import org.apache.kafka.common.utils.Utils
-
 import scala.collection.JavaConversions._
 
 object Kafka extends Logging {
 
   def getPropsFromArgs(args: Array[String]): Properties = {
     val optionParser = new OptionParser
-    val overrideOpt = optionParser.accepts("override", "Optional property that should override values set in server.properties file")
+    val overrideOpt: ArgumentAcceptingOptionSpec[String] = optionParser.accepts("override", "Optional property that should override values set in server.properties file")
       .withRequiredArg()
       .ofType(classOf[String])
     if (args.length == 0) {
       CommandLineUtils.printUsageAndDie(optionParser, "USAGE: java [options] %s server.properties [--override property=value]*".format(classOf[KafkaServer].getSimpleName()))
     }
-
+    // 加载server.properties配置
     val props = Utils.loadProps(args(0))
 
     if (args.length > 1) {
+      // 后面参数必须是[--override property=value]*
       val options = optionParser.parse(args.slice(1, args.length): _*)
-
       if (options.nonOptionArguments().size() > 0) {
+        // 不符合上面的格式这里会报错并退出进程
         CommandLineUtils.printUsageAndDie(optionParser, "Found non argument parameters: " + options.nonOptionArguments().toArray.mkString(","))
       }
-
+      // 增加配置项
       props.putAll(CommandLineUtils.parseKeyValueArgs(options.valuesOf(overrideOpt)))
     }
     props
@@ -53,10 +53,10 @@ object Kafka extends Logging {
 
   def main(args: Array[String]): Unit = {
     try {
-      val serverProps = getPropsFromArgs(args)
+      val serverProps: Properties = getPropsFromArgs(args)
       val kafkaServerStartable = KafkaServerStartable.fromProps(serverProps)
 
-      // attach shutdown handler to catch control-c
+      // 附加关闭处理程序来捕获control-c
       Runtime.getRuntime().addShutdownHook(new Thread() {
         override def run() = {
           kafkaServerStartable.shutdown

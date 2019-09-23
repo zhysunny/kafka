@@ -45,8 +45,9 @@ public class MultiSend implements Send {
         this.sends = sends;
         this.sendsIterator = sends.iterator();
         nextSendOrDone();
-        for (Send send: sends)
+        for (Send send: sends) {
             this.size += send.size();
+        }
     }
 
     @Override
@@ -62,8 +63,9 @@ public class MultiSend implements Send {
     @Override
     public boolean completed() {
         if (doneSends) {
-            if (totalWritten != size)
+            if (totalWritten != size) {
                 log.error("mismatch in sending bytes over socket; expected: " + size + " actual: " + totalWritten);
+            }
             return true;
         } else {
             return false;
@@ -72,8 +74,9 @@ public class MultiSend implements Send {
 
     @Override
     public long writeTo(GatheringByteChannel channel) throws IOException {
-        if (completed())
+        if (completed()) {
             throw new KafkaException("This operation cannot be completed on a complete request.");
+        }
 
         int totalWrittenPerCall = 0;
         boolean sendComplete = false;
@@ -82,19 +85,22 @@ public class MultiSend implements Send {
             totalWritten += written;
             totalWrittenPerCall += written;
             sendComplete = current.completed();
-            if (sendComplete)
+            if (sendComplete) {
                 nextSendOrDone();
+            }
         } while (!completed() && sendComplete);
-        if (log.isTraceEnabled())
+        if (log.isTraceEnabled()) {
             log.trace("Bytes written as part of multisend call : " + totalWrittenPerCall +  "Total bytes written so far : " + totalWritten + "Expected bytes to write : " + size);
+        }
         return totalWrittenPerCall;
     }
 
     // update current if there's a next Send, mark sends as done if there isn't
     private void nextSendOrDone() {
-        if (sendsIterator.hasNext())
+        if (sendsIterator.hasNext()) {
             current = sendsIterator.next();
-        else
+        } else {
             doneSends = true;
+        }
     }
 }

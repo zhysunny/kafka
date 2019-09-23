@@ -92,8 +92,9 @@ public class ProduceRequest extends AbstractRequest {
     @Override
     public AbstractRequestResponse getErrorResponse(int versionId, Throwable e) {
         /* In case the producer doesn't actually want any response */
-        if (acks == 0)
+        if (acks == 0) {
             return null;
+        }
 
         Map<TopicPartition, ProduceResponse.PartitionResponse> responseMap = new HashMap<TopicPartition, ProduceResponse.PartitionResponse>();
 

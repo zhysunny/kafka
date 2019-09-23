@@ -39,8 +39,9 @@ public class Compressor {
 
     static {
         int maxTypeId = -1;
-        for (CompressionType type : CompressionType.values())
+        for (CompressionType type : CompressionType.values()) {
             maxTypeId = Math.max(maxTypeId, type.id);
+        }
         TYPE_TO_RATE = new float[maxTypeId + 1];
         for (CompressionType type : CompressionType.values()) {
             TYPE_TO_RATE[type.id] = type.rate;

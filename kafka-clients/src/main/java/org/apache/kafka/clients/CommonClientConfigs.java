@@ -76,8 +76,9 @@ public class CommonClientConfigs {
 
     private static List<String> nonTestingSecurityProtocolNames() {
         List<String> names = new ArrayList<>();
-        for (SecurityProtocol protocol : SecurityProtocol.nonTestingValues())
+        for (SecurityProtocol protocol : SecurityProtocol.nonTestingValues()) {
             names.add(protocol.name);
+        }
         return names;
     }
 

@@ -45,8 +45,9 @@ public class ChannelBuilders {
             case SASL_SSL:
             case SASL_PLAINTEXT:
                 requireNonNullMode(mode, securityProtocol);
-                if (loginType == null)
+                if (loginType == null) {
                     throw new IllegalArgumentException("`loginType` must be non-null if `securityProtocol` is `" + securityProtocol + "`");
+                }
                 channelBuilder = new SaslChannelBuilder(mode, loginType, securityProtocol);
                 break;
             case PLAINTEXT:
@@ -68,17 +69,19 @@ public class ChannelBuilders {
         // this is a server-only config so it will always be null on the client
         Class<?> principalBuilderClass = (Class<?>) configs.get(SslConfigs.PRINCIPAL_BUILDER_CLASS_CONFIG);
         PrincipalBuilder principalBuilder;
-        if (principalBuilderClass == null)
+        if (principalBuilderClass == null) {
             principalBuilder = new DefaultPrincipalBuilder();
-        else
+        } else {
             principalBuilder = (PrincipalBuilder) Utils.newInstance(principalBuilderClass);
+        }
         principalBuilder.configure(configs);
         return principalBuilder;
     }
 
     private static void requireNonNullMode(Mode mode, SecurityProtocol securityProtocol) {
-        if (mode == null)
+        if (mode == null) {
             throw new IllegalArgumentException("`mode` must be non-null if `securityProtocol` is `" + securityProtocol + "`");
+        }
     }
 
 }

@@ -313,10 +313,12 @@ public class ConsumerConfig extends AbstractConfig {
                                                               Deserializer<?> valueDeserializer) {
         Map<String, Object> newConfigs = new HashMap<String, Object>();
         newConfigs.putAll(configs);
-        if (keyDeserializer != null)
+        if (keyDeserializer != null) {
             newConfigs.put(KEY_DESERIALIZER_CLASS_CONFIG, keyDeserializer.getClass());
-        if (valueDeserializer != null)
+        }
+        if (valueDeserializer != null) {
             newConfigs.put(VALUE_DESERIALIZER_CLASS_CONFIG, valueDeserializer.getClass());
+        }
         return newConfigs;
     }
 
@@ -325,10 +327,12 @@ public class ConsumerConfig extends AbstractConfig {
                                                      Deserializer<?> valueDeserializer) {
         Properties newProperties = new Properties();
         newProperties.putAll(properties);
-        if (keyDeserializer != null)
+        if (keyDeserializer != null) {
             newProperties.put(KEY_DESERIALIZER_CLASS_CONFIG, keyDeserializer.getClass().getName());
-        if (valueDeserializer != null)
+        }
+        if (valueDeserializer != null) {
             newProperties.put(VALUE_DESERIALIZER_CLASS_CONFIG, valueDeserializer.getClass().getName());
+        }
         return newProperties;
     }
 

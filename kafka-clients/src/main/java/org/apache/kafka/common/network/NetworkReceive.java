@@ -67,6 +67,7 @@ public class NetworkReceive implements Receive {
         return !size.hasRemaining() && !buffer.hasRemaining();
     }
 
+    @Override
     public long readFrom(ScatteringByteChannel channel) throws IOException {
         return readFromReadableChannel(channel);
     }
@@ -79,24 +80,28 @@ public class NetworkReceive implements Receive {
         int read = 0;
         if (size.hasRemaining()) {
             int bytesRead = channel.read(size);
-            if (bytesRead < 0)
+            if (bytesRead < 0) {
                 throw new EOFException();
+            }
             read += bytesRead;
             if (!size.hasRemaining()) {
                 size.rewind();
                 int receiveSize = size.getInt();
-                if (receiveSize < 0)
+                if (receiveSize < 0) {
                     throw new InvalidReceiveException("Invalid receive (size = " + receiveSize + ")");
-                if (maxSize != UNLIMITED && receiveSize > maxSize)
+                }
+                if (maxSize != UNLIMITED && receiveSize > maxSize) {
                     throw new InvalidReceiveException("Invalid receive (size = " + receiveSize + " larger than " + maxSize + ")");
+                }
 
                 this.buffer = ByteBuffer.allocate(receiveSize);
             }
         }
         if (buffer != null) {
             int bytesRead = channel.read(buffer);
-            if (bytesRead < 0)
+            if (bytesRead < 0) {
                 throw new EOFException();
+            }
             read += bytesRead;
         }
 

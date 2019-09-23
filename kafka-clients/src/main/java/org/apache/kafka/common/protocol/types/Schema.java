@@ -34,8 +34,9 @@ public class Schema extends Type {
         this.fieldsByName = new HashMap<String, Field>();
         for (int i = 0; i < this.fields.length; i++) {
             Field field = fs[i];
-            if (fieldsByName.containsKey(field.name))
+            if (fieldsByName.containsKey(field.name)) {
                 throw new SchemaException("Schema contains a duplicate field: " + field.name);
+            }
             this.fields[i] = new Field(i, field.name, field.type, field.doc, field.defaultValue, this);
             this.fieldsByName.put(fs[i].name, this.fields[i]);
         }
@@ -44,6 +45,7 @@ public class Schema extends Type {
     /**
      * Write a struct to the buffer
      */
+    @Override
     public void write(ByteBuffer buffer, Object o) {
         Struct r = (Struct) o;
         for (int i = 0; i < fields.length; i++) {
@@ -62,6 +64,7 @@ public class Schema extends Type {
     /**
      * Read a struct from the buffer
      */
+    @Override
     public Object read(ByteBuffer buffer) {
         Object[] objects = new Object[fields.length];
         for (int i = 0; i < fields.length; i++) {
@@ -79,11 +82,13 @@ public class Schema extends Type {
     /**
      * The size of the given record
      */
+    @Override
     public int sizeOf(Object o) {
         int size = 0;
         Struct r = (Struct) o;
-        for (int i = 0; i < fields.length; i++)
+        for (int i = 0; i < fields.length; i++) {
             size += fields[i].type.sizeOf(r.get(fields[i]));
+        }
         return size;
     }
 
@@ -124,6 +129,7 @@ public class Schema extends Type {
     /**
      * Display a string representation of the schema
      */
+    @Override
     public String toString() {
         StringBuilder b = new StringBuilder();
         b.append('{');
@@ -131,8 +137,9 @@ public class Schema extends Type {
             b.append(this.fields[i].name);
             b.append(':');
             b.append(this.fields[i].type());
-            if (i < this.fields.length - 1)
+            if (i < this.fields.length - 1) {
                 b.append(',');
+            }
         }
         b.append("}");
         return b.toString();

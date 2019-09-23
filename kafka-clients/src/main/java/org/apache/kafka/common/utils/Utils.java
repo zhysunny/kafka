@@ -209,8 +209,9 @@ public class Utils {
     public static long min(long first, long... rest) {
         long min = first;
         for (int i = 0; i < rest.length; i++) {
-            if (rest[i] < min)
+            if (rest[i] < min) {
                 min = rest[i];
+            }
         }
         return min;
     }
@@ -267,10 +268,11 @@ public class Utils {
      * @throws NullPointerException if t is null.
      */
     public static <T> T notNull(T t) {
-        if (t == null)
+        if (t == null) {
             throw new NullPointerException();
-        else
+        } else {
             return t;
+        }
     }
 
     /**
@@ -410,25 +412,27 @@ public class Utils {
         Iterator<T> iter = list.iterator();
         while (iter.hasNext()) {
             sb.append(iter.next());
-            if (iter.hasNext())
+            if (iter.hasNext()) {
                 sb.append(seperator);
+            }
         }
         return sb.toString();
     }
 
     /**
-     * Read a properties file from the given path
-     * @param filename The path of the file to read
+     * 从给定路径读取属性文件
+     * @param filename 要读取的文件的路径
      */
-    public static Properties loadProps(String filename) throws IOException, FileNotFoundException {
+    public static Properties loadProps(String filename) throws IOException {
         Properties props = new Properties();
         InputStream propStream = null;
         try {
             propStream = new FileInputStream(filename);
             props.load(propStream);
         } finally {
-            if (propStream != null)
+            if (propStream != null) {
                 propStream.close();
+            }
         }
         return props;
     }
@@ -439,8 +443,9 @@ public class Utils {
      */
     public static Map<String, String> propsToStringMap(Properties props) {
         Map<String, String> result = new HashMap<>();
-        for (Map.Entry<Object, Object> entry : props.entrySet())
+        for (Map.Entry<Object, Object> entry : props.entrySet()) {
             result.put(entry.getKey().toString(), entry.getValue().toString());
+        }
         return result;
     }
 
@@ -465,6 +470,7 @@ public class Utils {
         Thread thread = new Thread(runnable, name);
         thread.setDaemon(daemon);
         thread.setUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
+            @Override
             public void uncaughtException(Thread t, Throwable e) {
                 log.error("Uncaught exception in thread '" + t.getName() + "':", e);
             }
@@ -519,7 +525,9 @@ public class Utils {
      * @throws IOException
      */
     public static String readFileAsString(String path, Charset charset) throws IOException {
-        if (charset == null) charset = Charset.defaultCharset();
+        if (charset == null) {
+            charset = Charset.defaultCharset();
+        }
         FileInputStream stream = new FileInputStream(new File(path));
         String result = new String();
         try {
@@ -602,8 +610,9 @@ public class Utils {
         } else if (file.isDirectory()) {
             File[] files = file.listFiles();
             if (files != null) {
-                for (File f : files)
+                for (File f : files) {
                     delete(f);
+                }
             }
             file.delete();
         } else {
@@ -635,10 +644,11 @@ public class Utils {
      */
     public static ClassLoader getContextOrKafkaClassLoader() {
         ClassLoader cl = Thread.currentThread().getContextClassLoader();
-        if (cl == null)
+        if (cl == null) {
             return getKafkaClassLoader();
-        else
+        } else {
             return cl;
+        }
     }
 
 }

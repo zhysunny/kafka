@@ -553,16 +553,18 @@ public class KafkaConsumer<K, V> implements Consumer<K, V> {
             this.requestTimeoutMs = config.getInt(ConsumerConfig.REQUEST_TIMEOUT_MS_CONFIG);
             int sessionTimeOutMs = config.getInt(ConsumerConfig.SESSION_TIMEOUT_MS_CONFIG);
             int fetchMaxWaitMs = config.getInt(ConsumerConfig.FETCH_MAX_WAIT_MS_CONFIG);
-            if (this.requestTimeoutMs <= sessionTimeOutMs || this.requestTimeoutMs <= fetchMaxWaitMs)
+            if (this.requestTimeoutMs <= sessionTimeOutMs || this.requestTimeoutMs <= fetchMaxWaitMs) {
                 throw new ConfigException(ConsumerConfig.REQUEST_TIMEOUT_MS_CONFIG + " should be greater than " + ConsumerConfig.SESSION_TIMEOUT_MS_CONFIG + " and " + ConsumerConfig.FETCH_MAX_WAIT_MS_CONFIG);
+            }
             this.time = new SystemTime();
 
             MetricConfig metricConfig = new MetricConfig().samples(config.getInt(ConsumerConfig.METRICS_NUM_SAMPLES_CONFIG))
                     .timeWindow(config.getLong(ConsumerConfig.METRICS_SAMPLE_WINDOW_MS_CONFIG),
                             TimeUnit.MILLISECONDS);
             clientId = config.getString(ConsumerConfig.CLIENT_ID_CONFIG);
-            if (clientId.length() <= 0)
+            if (clientId.length() <= 0) {
                 clientId = "consumer-" + CONSUMER_CLIENT_ID_SEQUENCE.getAndIncrement();
+            }
             List<MetricsReporter> reporters = config.getConfiguredInstances(ConsumerConfig.METRIC_REPORTER_CLASSES_CONFIG,
                     MetricsReporter.class);
             reporters.add(new JmxReporter(JMX_PREFIX));
@@ -657,6 +659,7 @@ public class KafkaConsumer<K, V> implements Consumer<K, V> {
      * process of getting reassigned).
      * @return The set of partitions currently assigned to this consumer
      */
+    @Override
     public Set<TopicPartition> assignment() {
         acquire();
         try {
@@ -671,6 +674,7 @@ public class KafkaConsumer<K, V> implements Consumer<K, V> {
      * {@link #subscribe(List, ConsumerRebalanceListener)}, or an empty set if no such call has been made.
      * @return The set of topics currently subscribed to
      */
+    @Override
     public Set<String> subscription() {
         acquire();
         try {
@@ -779,6 +783,7 @@ public class KafkaConsumer<K, V> implements Consumer<K, V> {
      * Unsubscribe from topics currently subscribed with {@link #subscribe(List)}. This
      * also clears any partitions directly assigned through {@link #assign(List)}.
      */
+    @Override
     public void unsubscribe() {
         acquire();
         try {
@@ -809,8 +814,9 @@ public class KafkaConsumer<K, V> implements Consumer<K, V> {
             log.debug("Subscribed to partition(s): {}", Utils.join(partitions, ", "));
             this.subscriptions.assignFromUser(partitions);
             Set<String> topics = new HashSet<>();
-            for (TopicPartition tp : partitions)
+            for (TopicPartition tp : partitions) {
                 topics.add(tp.topic());
+            }
             metadata.setTopics(topics);
         } finally {
             release();
@@ -843,8 +849,9 @@ public class KafkaConsumer<K, V> implements Consumer<K, V> {
     public ConsumerRecords<K, V> poll(long timeout) {
         acquire();
         try {
-            if (timeout < 0)
+            if (timeout < 0) {
                 throw new IllegalArgumentException("Timeout must not be negative");
+            }
 
             // poll for new data until the timeout expires
             long start = time.milliseconds();
@@ -886,13 +893,15 @@ public class KafkaConsumer<K, V> implements Consumer<K, V> {
         coordinator.ensureCoordinatorKnown();
 
         // ensure we have partitions assigned if we expect to
-        if (subscriptions.partitionsAutoAssigned())
+        if (subscriptions.partitionsAutoAssigned()) {
             coordinator.ensurePartitionAssignment();
+        }
 
         // fetch positions if we have partitions we're subscribed to that we
         // don't know the offset for
-        if (!subscriptions.hasAllFetchPositions())
+        if (!subscriptions.hasAllFetchPositions()) {
             updateFetchPositions(this.subscriptions.missingFetchPositions());
+        }
 
         // init any new fetches (won't resend pending fetches)
         Cluster cluster = this.metadata.fetch();
@@ -1051,6 +1060,7 @@ public class KafkaConsumer<K, V> implements Consumer<K, V> {
      * Seek to the first offset for each of the given partitions. This function evaluates lazily, seeking to the
      * final offset in all partitions only when {@link #poll(long)} or {@link #position(TopicPartition)} are called.
      */
+    @Override
     public void seekToBeginning(TopicPartition... partitions) {
         acquire();
         try {
@@ -1069,6 +1079,7 @@ public class KafkaConsumer<K, V> implements Consumer<K, V> {
      * Seek to the last offset for each of the given partitions. This function evaluates lazily, seeking to the
      * final offset in all partitions only when {@link #poll(long)} or {@link #position(TopicPartition)} are called.
      */
+    @Override
     public void seekToEnd(TopicPartition... partitions) {
         acquire();
         try {
@@ -1096,11 +1107,13 @@ public class KafkaConsumer<K, V> implements Consumer<K, V> {
      *             configured groupId
      * @throws org.apache.kafka.common.KafkaException for any other unrecoverable errors
      */
+    @Override
     public long position(TopicPartition partition) {
         acquire();
         try {
-            if (!this.subscriptions.isAssigned(partition))
+            if (!this.subscriptions.isAssigned(partition)) {
                 throw new IllegalArgumentException("You can only check the position for partitions assigned to this consumer.");
+            }
             Long offset = this.subscriptions.position(partition);
             if (offset == null) {
                 updateFetchPositions(Collections.singleton(partition));
@@ -1176,8 +1189,9 @@ public class KafkaConsumer<K, V> implements Consumer<K, V> {
         try {
             Cluster cluster = this.metadata.fetch();
             List<PartitionInfo> parts = cluster.partitionsForTopic(topic);
-            if (parts != null)
+            if (parts != null) {
                 return parts;
+            }
 
             Map<String, List<PartitionInfo>> topicMetadata = fetcher.getTopicMetadata(Collections.singletonList(topic), requestTimeoutMs);
             return topicMetadata.get(topic);
@@ -1254,7 +1268,9 @@ public class KafkaConsumer<K, V> implements Consumer<K, V> {
     public void close() {
         acquire();
         try {
-            if (closed) return;
+            if (closed) {
+                return;
+            }
             close(false);
         } finally {
             release();
@@ -1306,8 +1322,9 @@ public class KafkaConsumer<K, V> implements Consumer<K, V> {
      * Check that the consumer hasn't been closed.
      */
     private void ensureNotClosed() {
-        if (this.closed)
+        if (this.closed) {
             throw new IllegalStateException("This consumer has already been closed.");
+        }
     }
 
     /**
@@ -1320,8 +1337,9 @@ public class KafkaConsumer<K, V> implements Consumer<K, V> {
     private void acquire() {
         ensureNotClosed();
         long threadId = Thread.currentThread().getId();
-        if (threadId != currentThread.get() && !currentThread.compareAndSet(NO_CURRENT_THREAD, threadId))
+        if (threadId != currentThread.get() && !currentThread.compareAndSet(NO_CURRENT_THREAD, threadId)) {
             throw new ConcurrentModificationException("KafkaConsumer is not safe for multi-threaded access");
+        }
         refcount.incrementAndGet();
     }
 
@@ -1329,7 +1347,8 @@ public class KafkaConsumer<K, V> implements Consumer<K, V> {
      * Release the light lock protecting the consumer from multi-threaded access.
      */
     private void release() {
-        if (refcount.decrementAndGet() == 0)
+        if (refcount.decrementAndGet() == 0) {
             currentThread.set(NO_CURRENT_THREAD);
+        }
     }
 }

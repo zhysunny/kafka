@@ -115,6 +115,7 @@ public final class RecordAccumulator {
     private void registerMetrics(Metrics metrics, String metricGrpName, Map<String, String> metricTags) {
         MetricName metricName = new MetricName("waiting-threads", metricGrpName, "The number of user threads blocked waiting for buffer memory to enqueue their records", metricTags);
         Measurable waitingThreads = new Measurable() {
+            @Override
             public double measure(MetricConfig config, long now) {
                 return free.queued();
             }
@@ -123,6 +124,7 @@ public final class RecordAccumulator {
 
         metricName = new MetricName("buffer-total-bytes", metricGrpName, "The maximum amount of buffer memory the client can use (whether or not it is currently used).", metricTags);
         Measurable totalBytes = new Measurable() {
+            @Override
             public double measure(MetricConfig config, long now) {
                 return free.totalMemory();
             }
@@ -131,6 +133,7 @@ public final class RecordAccumulator {
 
         metricName = new MetricName("buffer-available-bytes", metricGrpName, "The total amount of buffer memory that is not being used (either unallocated or in the free list).", metricTags);
         Measurable availableBytes = new Measurable() {
+            @Override
             public double measure(MetricConfig config, long now) {
                 return free.availableMemory();
             }
@@ -159,16 +162,18 @@ public final class RecordAccumulator {
         // abortIncompleteBatches().
         appendsInProgress.incrementAndGet();
         try {
-            if (closed)
+            if (closed) {
                 throw new IllegalStateException("Cannot send after the producer is closed.");
+            }
             // check if we have an in-progress batch
             Deque<RecordBatch> dq = dequeFor(tp);
             synchronized (dq) {
                 RecordBatch last = dq.peekLast();
                 if (last != null) {
                     FutureRecordMetadata future = last.tryAppend(key, value, callback, time.milliseconds());
-                    if (future != null)
+                    if (future != null) {
                         return new RecordAppendResult(future, dq.size() > 1 || last.records.isFull(), false);
+                    }
                 }
             }
 
@@ -178,8 +183,9 @@ public final class RecordAccumulator {
             ByteBuffer buffer = free.allocate(size, maxTimeToBlock);
             synchronized (dq) {
                 // Need to check if producer is closed again after grabbing the dequeue lock.
-                if (closed)
+                if (closed) {
                     throw new IllegalStateException("Cannot send after the producer is closed.");
+                }
                 RecordBatch last = dq.peekLast();
                 if (last != null) {
                     FutureRecordMetadata future = last.tryAppend(key, value, callback, time.milliseconds());
@@ -231,8 +237,9 @@ public final class RecordAccumulator {
                 }
             }
         }
-        if (expiredBatches.size() > 0)
+        if (expiredBatches.size() > 0) {
             log.trace("Expired {} batches in accumulator", count);
+        }
 
         return expiredBatches;
     }
@@ -313,8 +320,9 @@ public final class RecordAccumulator {
         for (Map.Entry<TopicPartition, Deque<RecordBatch>> entry : this.batches.entrySet()) {
             Deque<RecordBatch> deque = entry.getValue();
             synchronized (deque) {
-                if (deque.size() > 0)
+                if (deque.size() > 0) {
                     return true;
+                }
             }
         }
         return false;
@@ -331,8 +339,9 @@ public final class RecordAccumulator {
      * @return A list of {@link RecordBatch} for each node specified with total size less than the requested maxSize.
      */
     public Map<Integer, List<RecordBatch>> drain(Cluster cluster, Set<Node> nodes, int maxSize, long now) {
-        if (nodes.isEmpty())
+        if (nodes.isEmpty()) {
             return Collections.emptyMap();
+        }
 
         Map<Integer, List<RecordBatch>> batches = new HashMap<Integer, List<RecordBatch>>();
         for (Node node : nodes) {
@@ -379,14 +388,16 @@ public final class RecordAccumulator {
      */
     private Deque<RecordBatch> dequeFor(TopicPartition tp) {
         Deque<RecordBatch> d = this.batches.get(tp);
-        if (d != null)
+        if (d != null) {
             return d;
+        }
         d = new ArrayDeque<>();
         Deque<RecordBatch> previous = this.batches.putIfAbsent(tp, d);
-        if (previous == null)
+        if (previous == null) {
             return d;
-        else
+        } else {
             return previous;
+        }
     }
 
     /**
@@ -422,8 +433,9 @@ public final class RecordAccumulator {
      * Mark all partitions as ready to send and block until the send is complete
      */
     public void awaitFlushCompletion() throws InterruptedException {
-        for (RecordBatch batch : this.incomplete.all())
+        for (RecordBatch batch : this.incomplete.all()) {
             batch.produceFuture.await();
+        }
         this.flushesInProgress.decrementAndGet();
     }
 
@@ -517,8 +529,9 @@ public final class RecordAccumulator {
         public void remove(RecordBatch batch) {
             synchronized (incomplete) {
                 boolean removed = this.incomplete.remove(batch);
-                if (!removed)
+                if (!removed) {
                     throw new IllegalStateException("Remove from the incomplete set failed. This should be impossible.");
+                }
             }
         }
 

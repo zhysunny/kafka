@@ -114,14 +114,16 @@ public class Metrics implements Closeable {
         this.childrenSensors = new ConcurrentHashMap<>();
         this.reporters = Utils.notNull(reporters);
         this.time = time;
-        for (MetricsReporter reporter : reporters)
+        for (MetricsReporter reporter : reporters) {
             reporter.init(new ArrayList<KafkaMetric>());
+        }
 
         // Create the ThreadPoolExecutor only if expiration of Sensors is enabled.
         if (enableExpiration) {
             this.metricsScheduler = new ScheduledThreadPoolExecutor(1);
             // Creating a daemon thread to not block shutdown
             this.metricsScheduler.setThreadFactory(new ThreadFactory() {
+                @Override
                 public Thread newThread(Runnable runnable) {
                     return Utils.newThread("SensorExpiryThread", runnable, true);
                 }
@@ -215,16 +217,18 @@ public class Metrics implements Closeable {
             synchronized (sensor) {
                 synchronized (this) {
                     if (sensors.remove(name, sensor)) {
-                        for (KafkaMetric metric : sensor.metrics())
+                        for (KafkaMetric metric : sensor.metrics()) {
                             removeMetric(metric.metricName());
+                        }
                         log.debug("Removed sensor with name {}", name);
                         childSensors = childrenSensors.remove(sensor);
                     }
                 }
             }
             if (childSensors != null) {
-                for (Sensor childSensor : childSensors)
+                for (Sensor childSensor : childSensors) {
                     removeSensor(childSensor.name());
+                }
             }
         }
     }
@@ -265,8 +269,9 @@ public class Metrics implements Closeable {
     public synchronized KafkaMetric removeMetric(MetricName metricName) {
         KafkaMetric metric = this.metrics.remove(metricName);
         if (metric != null) {
-            for (MetricsReporter reporter : reporters)
+            for (MetricsReporter reporter : reporters) {
                 reporter.metricRemoval(metric);
+            }
         }
         return metric;
     }
@@ -281,11 +286,13 @@ public class Metrics implements Closeable {
 
     synchronized void registerMetric(KafkaMetric metric) {
         MetricName metricName = metric.metricName();
-        if (this.metrics.containsKey(metricName))
+        if (this.metrics.containsKey(metricName)) {
             throw new IllegalArgumentException("A metric named '" + metricName + "' already exists, can't register another one.");
+        }
         this.metrics.put(metricName, metric);
-        for (MetricsReporter reporter : reporters)
+        for (MetricsReporter reporter : reporters) {
             reporter.metricChange(metric);
+        }
     }
 
     /**
@@ -300,6 +307,7 @@ public class Metrics implements Closeable {
      * Package private for testing
      */
     class ExpireSensorTask implements Runnable {
+        @Override
         public void run() {
             for (Map.Entry<String, Sensor> sensorEntry : sensors.entrySet()) {
                 // removeSensor also locks the sensor object. This is fine because synchronized is reentrant
@@ -338,8 +346,9 @@ public class Metrics implements Closeable {
             }
         }
 
-        for (MetricsReporter reporter : this.reporters)
+        for (MetricsReporter reporter : this.reporters) {
             reporter.close();
+        }
     }
 
 }

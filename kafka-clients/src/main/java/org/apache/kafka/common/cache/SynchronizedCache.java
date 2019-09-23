@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -18,11 +18,14 @@
 package org.apache.kafka.common.cache;
 
 /**
- * Wrapper for caches that adds simple synchronization to provide a thread-safe cache. Note that this simply adds
- * synchronization around each cache method on the underlying unsynchronized cache. It does not add any support for
- * atomically checking for existence of an entry and computing and inserting the value if it is missing.
+ * 用于添加简单同步以提供线程安全缓存的缓存包装器。
+ * 注意，这只是在底层非同步缓存的每个缓存方法周围添加同步。
+ * 它不支持原子检查条目的存在性，也不支持计算和插入缺失的值。
+ * @author 章云
+ * @date 2019/9/23 21:37
  */
 public class SynchronizedCache<K, V> implements Cache<K, V> {
+
     private final Cache<K, V> underlying;
 
     public SynchronizedCache(Cache<K, V> underlying) {
@@ -48,4 +51,5 @@ public class SynchronizedCache<K, V> implements Cache<K, V> {
     public synchronized long size() {
         return underlying.size();
     }
+
 }

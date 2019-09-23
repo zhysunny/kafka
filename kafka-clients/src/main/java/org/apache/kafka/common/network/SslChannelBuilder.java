@@ -34,6 +34,7 @@ public class SslChannelBuilder implements ChannelBuilder {
         this.mode = mode;
     }
 
+    @Override
     public void configure(Map<String, ?> configs) throws KafkaException {
         try {
             this.configs = configs;
@@ -45,6 +46,7 @@ public class SslChannelBuilder implements ChannelBuilder {
         }
     }
 
+    @Override
     public KafkaChannel buildChannel(String id, SelectionKey key, int maxReceiveSize) throws KafkaException {
         KafkaChannel channel = null;
         try {
@@ -59,6 +61,7 @@ public class SslChannelBuilder implements ChannelBuilder {
         return channel;
     }
 
+    @Override
     public void close()  {
         this.principalBuilder.close();
     }

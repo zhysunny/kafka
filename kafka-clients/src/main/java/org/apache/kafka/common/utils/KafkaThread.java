@@ -26,6 +26,7 @@ public class KafkaThread extends Thread {
         super(runnable, name);
         setDaemon(daemon);
         setUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
+            @Override
             public void uncaughtException(Thread t, Throwable e) {
                 log.error("Uncaught exception in " + name + ": ", e);
             }

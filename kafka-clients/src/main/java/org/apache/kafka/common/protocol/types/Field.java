@@ -42,8 +42,9 @@ public class Field {
         this.doc = doc;
         this.defaultValue = defaultValue;
         this.schema = schema;
-        if (defaultValue != NO_DEFAULT)
+        if (defaultValue != NO_DEFAULT) {
             type.validate(defaultValue);
+        }
     }
 
     public Field(int index, String name, Type type, String doc, Object defaultValue) {

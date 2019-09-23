@@ -48,8 +48,9 @@ public class RangeAssignor extends AbstractPartitionAssignor {
     private List<TopicPartition> partitions(String topic,
                                             int numPartitions) {
         List<TopicPartition> partitions = new ArrayList<>();
-        for (int i = 0; i < numPartitions; i++)
+        for (int i = 0; i < numPartitions; i++) {
             partitions.add(new TopicPartition(topic, i));
+        }
         return partitions;
     }
 
@@ -57,8 +58,9 @@ public class RangeAssignor extends AbstractPartitionAssignor {
         Map<String, List<String>> res = new HashMap<>();
         for (Map.Entry<String, List<String>> subscriptionEntry : consumerMetadata.entrySet()) {
             String consumerId = subscriptionEntry.getKey();
-            for (String topic : subscriptionEntry.getValue())
+            for (String topic : subscriptionEntry.getValue()) {
                 put(res, topic, consumerId);
+            }
         }
         return res;
     }
@@ -68,16 +70,18 @@ public class RangeAssignor extends AbstractPartitionAssignor {
                                                     Map<String, List<String>> subscriptions) {
         Map<String, List<String>> consumersPerTopic = consumersPerTopic(subscriptions);
         Map<String, List<TopicPartition>> assignment = new HashMap<>();
-        for (String memberId : subscriptions.keySet())
+        for (String memberId : subscriptions.keySet()) {
             assignment.put(memberId, new ArrayList<TopicPartition>());
+        }
 
         for (Map.Entry<String, List<String>> topicEntry : consumersPerTopic.entrySet()) {
             String topic = topicEntry.getKey();
             List<String> consumersForTopic = topicEntry.getValue();
 
             Integer numPartitionsForTopic = partitionsPerTopic.get(topic);
-            if (numPartitionsForTopic == null)
+            if (numPartitionsForTopic == null) {
                 continue;
+            }
 
             Collections.sort(consumersForTopic);
 

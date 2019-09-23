@@ -70,10 +70,12 @@ public class SaslServerAuthenticator implements Authenticator {
     private NetworkSend netOutBuffer;
 
     public SaslServerAuthenticator(String node, final Subject subject, KerberosShortNamer kerberosNameParser, int maxReceiveSize) throws IOException {
-        if (subject == null)
+        if (subject == null) {
             throw new IllegalArgumentException("subject cannot be null");
-        if (subject.getPrincipals().isEmpty())
+        }
+        if (subject.getPrincipals().isEmpty()) {
             throw new IllegalArgumentException("subject must have at least one principal");
+        }
         this.node = node;
         this.subject = subject;
         this.kerberosNamer = kerberosNameParser;
@@ -81,6 +83,7 @@ public class SaslServerAuthenticator implements Authenticator {
         saslServer = createSaslServer();
     }
 
+    @Override
     public void configure(TransportLayer transportLayer, PrincipalBuilder principalBuilder, Map<String, ?> configs) {
         this.transportLayer = transportLayer;
     }
@@ -126,6 +129,7 @@ public class SaslServerAuthenticator implements Authenticator {
 
         try {
             return Subject.doAs(subject, new PrivilegedExceptionAction<SaslServer>() {
+                @Override
                 public SaslServer run() throws SaslException {
                     return Sasl.createSaslServer(mech, servicePrincipalName, serviceHostname, null, saslServerCallbackHandler);
                 }
@@ -142,16 +146,20 @@ public class SaslServerAuthenticator implements Authenticator {
      * The messages are sent and received as size delimited bytes that consists of a 4 byte network-ordered size N
      * followed by N bytes representing the opaque payload.
      */
+    @Override
     public void authenticate() throws IOException {
-        if (netOutBuffer != null && !flushNetOutBufferAndUpdateInterestOps())
+        if (netOutBuffer != null && !flushNetOutBufferAndUpdateInterestOps()) {
             return;
+        }
 
         if (saslServer.isComplete()) {
             transportLayer.removeInterestOps(SelectionKey.OP_WRITE);
             return;
         }
 
-        if (netInBuffer == null) netInBuffer = new NetworkReceive(maxReceiveSize, node);
+        if (netInBuffer == null) {
+            netInBuffer = new NetworkReceive(maxReceiveSize, node);
+        }
 
         netInBuffer.readFrom(transportLayer);
 
@@ -172,30 +180,35 @@ public class SaslServerAuthenticator implements Authenticator {
         }
     }
 
+    @Override
     public Principal principal() {
         return new KafkaPrincipal(KafkaPrincipal.USER_TYPE, saslServer.getAuthorizationID());
     }
 
+    @Override
     public boolean complete() {
         return saslServer.isComplete();
     }
 
+    @Override
     public void close() throws IOException {
         saslServer.dispose();
     }
 
     private boolean flushNetOutBufferAndUpdateInterestOps() throws IOException {
         boolean flushedCompletely = flushNetOutBuffer();
-        if (flushedCompletely)
+        if (flushedCompletely) {
             transportLayer.removeInterestOps(SelectionKey.OP_WRITE);
-        else
+        } else {
             transportLayer.addInterestOps(SelectionKey.OP_WRITE);
+        }
         return flushedCompletely;
     }
 
     private boolean flushNetOutBuffer() throws IOException {
-        if (!netOutBuffer.completed())
+        if (!netOutBuffer.completed()) {
             netOutBuffer.writeTo(transportLayer);
+        }
         return netOutBuffer.completed();
     }
 }

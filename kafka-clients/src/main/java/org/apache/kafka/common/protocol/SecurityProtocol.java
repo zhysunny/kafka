@@ -48,8 +48,9 @@ public enum SecurityProtocol {
         for (SecurityProtocol proto : protocols) {
             codeToSecurityProtocol.put(proto.id, proto);
             names.add(proto.name);
-            if (!proto.isTesting)
+            if (!proto.isTesting) {
                 nonTestingValues.add(proto);
+            }
         }
         CODE_TO_SECURITY_PROTOCOL = Collections.unmodifiableMap(codeToSecurityProtocol);
         NAMES = Collections.unmodifiableList(names);

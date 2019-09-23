@@ -18,13 +18,16 @@ import java.util.Map;
 
 public class IntegerDeserializer implements Deserializer<Integer> {
 
+    @Override
     public void configure(Map<String, ?> configs, boolean isKey) {
         // nothing to do
     }
 
+    @Override
     public Integer deserialize(String topic, byte[] data) {
-        if (data == null)
+        if (data == null) {
             return null;
+        }
         if (data.length != 4) {
             throw new SerializationException("Size of data received by IntegerDeserializer is " +
                     "not 4");
@@ -38,6 +41,7 @@ public class IntegerDeserializer implements Deserializer<Integer> {
         return value;
     }
 
+    @Override
     public void close() {
         // nothing to do
     }

@@ -82,10 +82,11 @@ public abstract class Type {
 
         @Override
         public Byte validate(Object item) {
-            if (item instanceof Byte)
+            if (item instanceof Byte) {
                 return (Byte) item;
-            else
+            } else {
                 throw new SchemaException(item + " is not a Byte.");
+            }
         }
     };
 
@@ -112,10 +113,11 @@ public abstract class Type {
 
         @Override
         public Short validate(Object item) {
-            if (item instanceof Short)
+            if (item instanceof Short) {
                 return (Short) item;
-            else
+            } else {
                 throw new SchemaException(item + " is not a Short.");
+            }
         }
     };
 
@@ -142,10 +144,11 @@ public abstract class Type {
 
         @Override
         public Integer validate(Object item) {
-            if (item instanceof Integer)
+            if (item instanceof Integer) {
                 return (Integer) item;
-            else
+            } else {
                 throw new SchemaException(item + " is not an Integer.");
+            }
         }
     };
 
@@ -172,10 +175,11 @@ public abstract class Type {
 
         @Override
         public Long validate(Object item) {
-            if (item instanceof Long)
+            if (item instanceof Long) {
                 return (Long) item;
-            else
+            } else {
                 throw new SchemaException(item + " is not a Long.");
+            }
         }
     };
 
@@ -183,8 +187,9 @@ public abstract class Type {
         @Override
         public void write(ByteBuffer buffer, Object o) {
             byte[] bytes = Utils.utf8((String) o);
-            if (bytes.length > Short.MAX_VALUE)
+            if (bytes.length > Short.MAX_VALUE) {
                 throw new SchemaException("String is longer than the maximum string length.");
+            }
             buffer.putShort((short) bytes.length);
             buffer.put(bytes);
         }
@@ -209,10 +214,11 @@ public abstract class Type {
 
         @Override
         public String validate(Object item) {
-            if (item instanceof String)
+            if (item instanceof String) {
                 return (String) item;
-            else
+            } else {
                 throw new SchemaException(item + " is not a String.");
+            }
         }
     };
 
@@ -248,10 +254,11 @@ public abstract class Type {
 
         @Override
         public ByteBuffer validate(Object item) {
-            if (item instanceof ByteBuffer)
+            if (item instanceof ByteBuffer) {
                 return (ByteBuffer) item;
-            else
+            } else {
                 throw new SchemaException(item + " is not a java.nio.ByteBuffer.");
+            }
         }
     };
 
@@ -278,8 +285,9 @@ public abstract class Type {
         @Override
         public Object read(ByteBuffer buffer) {
             int size = buffer.getInt();
-            if (size < 0)
+            if (size < 0) {
                 return null;
+            }
 
             ByteBuffer val = buffer.slice();
             val.limit(size);
@@ -289,8 +297,9 @@ public abstract class Type {
 
         @Override
         public int sizeOf(Object o) {
-            if (o == null)
+            if (o == null) {
                 return 4;
+            }
 
             ByteBuffer buffer = (ByteBuffer) o;
             return 4 + buffer.remaining();
@@ -303,11 +312,13 @@ public abstract class Type {
 
         @Override
         public ByteBuffer validate(Object item) {
-            if (item == null)
+            if (item == null) {
                 return null;
+            }
 
-            if (item instanceof ByteBuffer)
+            if (item instanceof ByteBuffer) {
                 return (ByteBuffer) item;
+            }
 
             throw new SchemaException(item + " is not a java.nio.ByteBuffer.");
         }

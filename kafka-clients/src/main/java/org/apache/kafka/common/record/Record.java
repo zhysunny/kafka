@@ -154,8 +154,9 @@ public final class Record {
 
     public static byte computeAttributes(CompressionType type) {
         byte attributes = 0;
-        if (type.id > 0)
+        if (type.id > 0) {
             attributes = (byte) (attributes | (COMPRESSION_CODEC_MASK & type.id));
+        }
         return attributes;
     }
 
@@ -175,8 +176,9 @@ public final class Record {
         Crc32 crc = new Crc32();
         crc.update(CURRENT_MAGIC_VALUE);
         byte attributes = 0;
-        if (type.id > 0)
+        if (type.id > 0) {
             attributes = (byte) (attributes | (COMPRESSION_CODEC_MASK & type.id));
+        }
         crc.update(attributes);
         // update for the key
         if (key == null) {
@@ -222,11 +224,12 @@ public final class Record {
      * Throw an InvalidRecordException if isValid is false for this record
      */
     public void ensureValid() {
-        if (!isValid())
+        if (!isValid()) {
             throw new InvalidRecordException("Record is corrupt (stored crc = " + checksum()
                                              + ", computed crc = "
                                              + computeChecksum()
                                              + ")");
+        }
     }
 
     /**
@@ -316,6 +319,7 @@ public final class Record {
         }
     }
 
+    @Override
     public String toString() {
         return String.format("Record(magic = %d, attributes = %d, compression = %s, crc = %d, key = %d bytes, value = %d bytes)",
                              magic(),
@@ -326,17 +330,22 @@ public final class Record {
                              value() == null ? 0 : value().limit());
     }
 
+    @Override
     public boolean equals(Object other) {
-        if (this == other)
+        if (this == other) {
             return true;
-        if (other == null)
+        }
+        if (other == null) {
             return false;
-        if (!other.getClass().equals(Record.class))
+        }
+        if (!other.getClass().equals(Record.class)) {
             return false;
+        }
         Record record = (Record) other;
         return this.buffer.equals(record.buffer);
     }
 
+    @Override
     public int hashCode() {
         return buffer.hashCode();
     }

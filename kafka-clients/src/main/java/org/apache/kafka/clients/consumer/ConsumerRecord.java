@@ -33,8 +33,9 @@ public final class ConsumerRecord<K, V> {
      * @param value The record contents
      */
     public ConsumerRecord(String topic, int partition, long offset, K key, V value) {
-        if (topic == null)
+        if (topic == null) {
             throw new IllegalArgumentException("Topic cannot be null");
+        }
         this.topic = topic;
         this.partition = partition;
         this.offset = offset;

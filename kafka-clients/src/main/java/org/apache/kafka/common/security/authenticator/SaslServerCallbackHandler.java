@@ -40,11 +40,13 @@ public class SaslServerCallbackHandler implements CallbackHandler {
 
     public SaslServerCallbackHandler(Configuration configuration, KerberosShortNamer kerberosNameParser) throws IOException {
         AppConfigurationEntry[] configurationEntries = configuration.getAppConfigurationEntry(JaasUtils.LOGIN_CONTEXT_SERVER);
-        if (configurationEntries == null)
+        if (configurationEntries == null) {
             throw new IOException("Could not find a 'KafkaServer' entry in this configuration: Kafka Server cannot start.");
+        }
         this.kerberosShortNamer = kerberosNameParser;
     }
 
+    @Override
     public void handle(Callback[] callbacks) throws UnsupportedCallbackException {
         for (Callback callback : callbacks) {
             if (callback instanceof RealmCallback) {

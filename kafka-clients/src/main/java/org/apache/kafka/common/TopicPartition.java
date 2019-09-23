@@ -42,8 +42,9 @@ public final class TopicPartition implements Serializable {
 
     @Override
     public int hashCode() {
-        if (hash != 0)
+        if (hash != 0) {
             return hash;
+        }
         final int prime = 31;
         int result = 1;
         result = prime * result + partition;
@@ -54,20 +55,26 @@ public final class TopicPartition implements Serializable {
 
     @Override
     public boolean equals(Object obj) {
-        if (this == obj)
+        if (this == obj) {
             return true;
-        if (obj == null)
+        }
+        if (obj == null) {
             return false;
-        if (getClass() != obj.getClass())
+        }
+        if (getClass() != obj.getClass()) {
             return false;
+        }
         TopicPartition other = (TopicPartition) obj;
-        if (partition != other.partition)
+        if (partition != other.partition) {
             return false;
+        }
         if (topic == null) {
-            if (other.topic != null)
+            if (other.topic != null) {
                 return false;
-        } else if (!topic.equals(other.topic))
+            }
+        } else if (!topic.equals(other.topic)) {
             return false;
+        }
         return true;
     }
 

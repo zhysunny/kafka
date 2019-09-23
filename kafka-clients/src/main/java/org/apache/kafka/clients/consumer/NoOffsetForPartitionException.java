@@ -37,6 +37,7 @@ public class NoOffsetForPartitionException extends InvalidOffsetException {
         return partition;
     }
 
+    @Override
     public Set<TopicPartition> partitions() {
         return Collections.singleton(partition);
     }

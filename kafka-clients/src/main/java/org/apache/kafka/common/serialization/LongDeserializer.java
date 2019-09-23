@@ -18,13 +18,16 @@ import java.util.Map;
 
 public class LongDeserializer implements Deserializer<Long> {
 
+    @Override
     public void configure(Map<String, ?> configs, boolean isKey) {
         // nothing to do
     }
 
+    @Override
     public Long deserialize(String topic, byte[] data) {
-        if (data == null)
+        if (data == null) {
             return null;
+        }
         if (data.length != 8) {
             throw new SerializationException("Size of data received by LongDeserializer is " +
                     "not 8");
@@ -38,6 +41,7 @@ public class LongDeserializer implements Deserializer<Long> {
         return value;
     }
 
+    @Override
     public void close() {
         // nothing to do
     }

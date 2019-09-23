@@ -70,8 +70,9 @@ public class MetricConfig {
     }
 
     public MetricConfig samples(int samples) {
-        if (samples < 1)
+        if (samples < 1) {
             throw new IllegalArgumentException("The number of samples must be at least 1.");
+        }
         this.samples = samples;
         return this;
     }

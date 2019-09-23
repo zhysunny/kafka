@@ -66,25 +66,30 @@ public class SslFactory implements Configurable {
 
 
         List<String> cipherSuitesList = (List<String>) configs.get(SslConfigs.SSL_CIPHER_SUITES_CONFIG);
-        if (cipherSuitesList != null)
+        if (cipherSuitesList != null) {
             this.cipherSuites = cipherSuitesList.toArray(new String[cipherSuitesList.size()]);
+        }
 
         List<String> enabledProtocolsList = (List<String>) configs.get(SslConfigs.SSL_ENABLED_PROTOCOLS_CONFIG);
-        if (enabledProtocolsList != null)
+        if (enabledProtocolsList != null) {
             this.enabledProtocols = enabledProtocolsList.toArray(new String[enabledProtocolsList.size()]);
+        }
 
         String endpointIdentification = (String) configs.get(SslConfigs.SSL_ENDPOINT_IDENTIFICATION_ALGORITHM_CONFIG);
-        if (endpointIdentification != null)
+        if (endpointIdentification != null) {
             this.endpointIdentification = endpointIdentification;
+        }
 
         String clientAuthConfig = clientAuthConfigOverride;
-        if (clientAuthConfig == null)
+        if (clientAuthConfig == null) {
             clientAuthConfig = (String) configs.get(SslConfigs.SSL_CLIENT_AUTH_CONFIG);
+        }
         if (clientAuthConfig != null) {
-            if (clientAuthConfig.equals("required"))
+            if ("required".equals(clientAuthConfig)) {
                 this.needClientAuth = true;
-            else if (clientAuthConfig.equals("requested"))
+            } else if ("requested".equals(clientAuthConfig)) {
                 this.wantClientAuth = true;
+            }
         }
 
         this.kmfAlgorithm = (String) configs.get(SslConfigs.SSL_KEYMANAGER_ALGORITHM_CONFIG);
@@ -108,10 +113,11 @@ public class SslFactory implements Configurable {
 
     private SSLContext createSSLContext() throws GeneralSecurityException, IOException  {
         SSLContext sslContext;
-        if (provider != null)
+        if (provider != null) {
             sslContext = SSLContext.getInstance(protocol, provider);
-        else
+        } else {
             sslContext = SSLContext.getInstance(protocol);
+        }
 
         KeyManager[] keyManagers = null;
         if (keystore != null) {
@@ -134,15 +140,20 @@ public class SslFactory implements Configurable {
 
     public SSLEngine createSslEngine(String peerHost, int peerPort) {
         SSLEngine sslEngine = sslContext.createSSLEngine(peerHost, peerPort);
-        if (cipherSuites != null) sslEngine.setEnabledCipherSuites(cipherSuites);
-        if (enabledProtocols != null) sslEngine.setEnabledProtocols(enabledProtocols);
+        if (cipherSuites != null) {
+            sslEngine.setEnabledCipherSuites(cipherSuites);
+        }
+        if (enabledProtocols != null) {
+            sslEngine.setEnabledProtocols(enabledProtocols);
+        }
 
         if (mode == Mode.SERVER) {
             sslEngine.setUseClientMode(false);
-            if (needClientAuth)
+            if (needClientAuth) {
                 sslEngine.setNeedClientAuth(needClientAuth);
-            else
+            } else {
                 sslEngine.setWantClientAuth(wantClientAuth);
+            }
         } else {
             sslEngine.setUseClientMode(true);
             SSLParameters sslParams = sslEngine.getSSLParameters();
@@ -200,7 +211,9 @@ public class SslFactory implements Configurable {
                 ks.load(in, password.value().toCharArray());
                 return ks;
             } finally {
-                if (in != null) in.close();
+                if (in != null) {
+                    in.close();
+                }
             }
         }
     }

@@ -117,11 +117,13 @@ public final class Metadata {
         long begin = System.currentTimeMillis();
         long remainingWaitMs = maxWaitMs;
         while (this.version <= lastVersion) {
-            if (remainingWaitMs != 0)
+            if (remainingWaitMs != 0) {
                 wait(remainingWaitMs);
+            }
             long elapsed = System.currentTimeMillis() - begin;
-            if (elapsed >= maxWaitMs)
+            if (elapsed >= maxWaitMs) {
                 throw new TimeoutException("Failed to update metadata after " + maxWaitMs + " ms.");
+            }
             remainingWaitMs = maxWaitMs - elapsed;
         }
     }
@@ -131,8 +133,9 @@ public final class Metadata {
      * @param topics
      */
     public synchronized void setTopics(Collection<String> topics) {
-        if (!this.topics.containsAll(topics))
+        if (!this.topics.containsAll(topics)) {
             requestUpdate();
+        }
         this.topics.clear();
         this.topics.addAll(topics);
     }
@@ -162,8 +165,9 @@ public final class Metadata {
         this.lastSuccessfulRefreshMs = now;
         this.version += 1;
 
-        for (Listener listener: listeners)
+        for (Listener listener: listeners) {
             listener.onMetadataUpdate(cluster);
+        }
 
         // Do this after notifying listeners as subscribed topics' list can be changed by listeners
         this.cluster = this.needMetadataForAllTopics ? getClusterForCurrentTopics(cluster) : cluster;

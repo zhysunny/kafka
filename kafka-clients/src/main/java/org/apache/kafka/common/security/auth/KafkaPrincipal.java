@@ -55,12 +55,18 @@ public class KafkaPrincipal implements Principal {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof KafkaPrincipal)) return false;
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof KafkaPrincipal)) {
+            return false;
+        }
 
         KafkaPrincipal that = (KafkaPrincipal) o;
 
-        if (!principalType.equals(that.principalType)) return false;
+        if (!principalType.equals(that.principalType)) {
+            return false;
+        }
         return name.equals(that.name);
 
     }

@@ -49,8 +49,9 @@ final class InFlightRequests {
      */
     private Deque<ClientRequest> requestQueue(String node) {
         Deque<ClientRequest> reqs = requests.get(node);
-        if (reqs == null || reqs.isEmpty())
+        if (reqs == null || reqs.isEmpty()) {
             throw new IllegalStateException("Response from server for which there are no in-flight requests.");
+        }
         return reqs;
     }
 
@@ -105,8 +106,9 @@ final class InFlightRequests {
      */
     public int inFlightRequestCount() {
         int total = 0;
-        for (Deque<ClientRequest> deque : this.requests.values())
+        for (Deque<ClientRequest> deque : this.requests.values()) {
             total += deque.size();
+        }
         return total;
     }
 

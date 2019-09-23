@@ -109,18 +109,20 @@ public class MockProducer<K, V> implements Producer<K, V> {
     @Override
     public synchronized Future<RecordMetadata> send(ProducerRecord<K, V> record, Callback callback) {
         int partition = 0;
-        if (this.cluster.partitionsForTopic(record.topic()) != null)
+        if (this.cluster.partitionsForTopic(record.topic()) != null) {
             partition = partition(record, this.cluster);
+        }
         ProduceRequestResult result = new ProduceRequestResult();
         FutureRecordMetadata future = new FutureRecordMetadata(result, 0);
         TopicPartition topicPartition = new TopicPartition(record.topic(), partition);
         long offset = nextOffset(topicPartition);
         Completion completion = new Completion(topicPartition, offset, new RecordMetadata(topicPartition, 0, offset), result, callback);
         this.sent.add(record);
-        if (autoComplete)
+        if (autoComplete) {
             completion.complete(null);
-        else
+        } else {
             this.completions.addLast(completion);
+        }
         return future;
     }
 
@@ -139,15 +141,19 @@ public class MockProducer<K, V> implements Producer<K, V> {
         }
     }
 
+    @Override
     public synchronized void flush() {
-        while (!this.completions.isEmpty())
+        while (!this.completions.isEmpty()) {
             completeNext();
+        }
     }
 
+    @Override
     public List<PartitionInfo> partitionsFor(String topic) {
         return this.cluster.partitionsForTopic(topic);
     }
 
+    @Override
     public Map<MetricName, Metric> metrics() {
         return Collections.emptyMap();
     }
@@ -209,11 +215,12 @@ public class MockProducer<K, V> implements Producer<K, V> {
             List<PartitionInfo> partitions = cluster.partitionsForTopic(topic);
             int numPartitions = partitions.size();
             // they have given us a partition, use it
-            if (partition < 0 || partition >= numPartitions)
+            if (partition < 0 || partition >= numPartitions) {
                 throw new IllegalArgumentException("Invalid partition given with record: " + partition
                                                    + " is not in the range [0..."
                                                    + numPartitions
                                                    + "].");
+            }
             return partition;
         }
         byte[] keyBytes = keySerializer.serialize(topic, record.key());
@@ -243,10 +250,11 @@ public class MockProducer<K, V> implements Producer<K, V> {
         public void complete(RuntimeException e) {
             result.done(topicPartition, e == null ? offset : -1L, e);
             if (callback != null) {
-                if (e == null)
+                if (e == null) {
                     callback.onCompletion(metadata, null);
-                else
+                } else {
                     callback.onCompletion(null, e);
+                }
             }
         }
     }

@@ -64,8 +64,9 @@ public class AppInfoParser {
         MBeanServer server = ManagementFactory.getPlatformMBeanServer();
         try {
             ObjectName name = new ObjectName(prefix + ":type=app-info,id=" + id);
-            if (server.isRegistered(name))
+            if (server.isRegistered(name)) {
                 server.unregisterMBean(name);
+            }
         } catch (JMException e) {
             log.warn("Error unregistering AppInfo mbean", e);
         }

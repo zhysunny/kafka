@@ -155,8 +155,9 @@ public class Fetcher<K, V> {
     public void updateFetchPositions(Set<TopicPartition> partitions) {
         // reset the fetch position to the committed position
         for (TopicPartition tp : partitions) {
-            if (!subscriptions.isAssigned(tp) || subscriptions.isFetchable(tp))
+            if (!subscriptions.isAssigned(tp) || subscriptions.isFetchable(tp)) {
                 continue;
+            }
 
             // TODO: If there are several offsets to reset, we could submit offset requests in parallel
             if (subscriptions.isOffsetResetNeeded(tp)) {
@@ -190,8 +191,9 @@ public class Fetcher<K, V> {
      * @return The map of topics with their partition information
      */
     public Map<String, List<PartitionInfo>> getTopicMetadata(List<String> topics, long timeout) {
-        if (topics != null && topics.isEmpty())
+        if (topics != null && topics.isEmpty()) {
             return Collections.emptyMap();
+        }
 
         long start = time.milliseconds();
         long remaining = timeout;
@@ -200,16 +202,18 @@ public class Fetcher<K, V> {
             RequestFuture<ClientResponse> future = sendMetadataRequest(topics);
             client.poll(future, remaining);
 
-            if (future.failed() && !future.isRetriable())
+            if (future.failed() && !future.isRetriable()) {
                 throw future.exception();
+            }
 
             if (future.succeeded()) {
                 MetadataResponse response = new MetadataResponse(future.value().responseBody());
                 Cluster cluster = response.cluster();
 
                 Set<String> unauthorizedTopics = cluster.unauthorizedTopics();
-                if (!unauthorizedTopics.isEmpty())
+                if (!unauthorizedTopics.isEmpty()) {
                     throw new TopicAuthorizationException(unauthorizedTopics);
+                }
 
                 boolean shouldRetry = false;
                 if (!response.errors().isEmpty()) {
@@ -222,24 +226,27 @@ public class Fetcher<K, V> {
                         String topic = errorEntry.getKey();
                         Errors error = errorEntry.getValue();
 
-                        if (error == Errors.INVALID_TOPIC_EXCEPTION)
+                        if (error == Errors.INVALID_TOPIC_EXCEPTION) {
                             throw new InvalidTopicException("Topic '" + topic + "' is invalid");
-                        else if (error == Errors.UNKNOWN_TOPIC_OR_PARTITION)
+                        } else if (error == Errors.UNKNOWN_TOPIC_OR_PARTITION)
                             // if a requested topic is unknown, we just continue and let it be absent
                             // in the returned map
+                        {
                             continue;
-                        else if (error.exception() instanceof RetriableException)
+                        } else if (error.exception() instanceof RetriableException) {
                             shouldRetry = true;
-                        else
+                        } else {
                             throw new KafkaException("Unexpected error fetching metadata for topic " + topic,
                                     error.exception());
+                        }
                     }
                 }
 
                 if (!shouldRetry) {
                     HashMap<String, List<PartitionInfo>> topicsPartitionInfos = new HashMap<>();
-                    for (String topic : cluster.topics())
+                    for (String topic : cluster.topics()) {
                         topicsPartitionInfos.put(topic, cluster.availablePartitionsForTopic(topic));
+                    }
                     return topicsPartitionInfos;
                 }
             }
@@ -262,13 +269,15 @@ public class Fetcher<K, V> {
      * @return A future that indicates result of sent metadata request
      */
     private RequestFuture<ClientResponse> sendMetadataRequest(List<String> topics) {
-        if (topics == null)
+        if (topics == null) {
             topics = Collections.emptyList();
+        }
         final Node node = client.leastLoadedNode();
-        if (node == null)
+        if (node == null) {
             return RequestFuture.noBrokersAvailable();
-        else
+        } else {
             return client.send(node, ApiKeys.METADATA, new MetadataRequest(topics));
+        }
     }
 
     /**
@@ -280,19 +289,21 @@ public class Fetcher<K, V> {
     private void resetOffset(TopicPartition partition) {
         OffsetResetStrategy strategy = subscriptions.resetStrategy(partition);
         final long timestamp;
-        if (strategy == OffsetResetStrategy.EARLIEST)
+        if (strategy == OffsetResetStrategy.EARLIEST) {
             timestamp = ListOffsetRequest.EARLIEST_TIMESTAMP;
-        else if (strategy == OffsetResetStrategy.LATEST)
+        } else if (strategy == OffsetResetStrategy.LATEST) {
             timestamp = ListOffsetRequest.LATEST_TIMESTAMP;
-        else
+        } else {
             throw new NoOffsetForPartitionException(partition);
+        }
 
         log.debug("Resetting offset for partition {} to {} offset.", partition, strategy.name().toLowerCase());
         long offset = listOffset(partition, timestamp);
 
         // we might lose the assignment while fetching the offset, so check it is still active
-        if (subscriptions.isAssigned(partition))
+        if (subscriptions.isAssigned(partition)) {
             this.subscriptions.seek(partition, offset);
+        }
     }
 
     /**
@@ -307,16 +318,19 @@ public class Fetcher<K, V> {
             RequestFuture<Long> future = sendListOffsetRequest(partition, timestamp);
             client.poll(future);
 
-            if (future.succeeded())
+            if (future.succeeded()) {
                 return future.value();
+            }
 
-            if (!future.isRetriable())
+            if (!future.isRetriable()) {
                 throw future.exception();
+            }
 
-            if (future.exception() instanceof InvalidMetadataException)
+            if (future.exception() instanceof InvalidMetadataException) {
                 client.awaitMetadataUpdate();
-            else
+            } else {
                 time.sleep(retryBackoffMs);
+            }
         }
     }
 
@@ -337,12 +351,14 @@ public class Fetcher<K, V> {
             }
             Long position = subscriptions.position(entry.getKey());
             // ignore partition if the current position != the offset in fetchResponse, e.g. after seek()
-            if (position != null && entry.getValue().equals(position))
+            if (position != null && entry.getValue().equals(position)) {
                 currentOutOfRangePartitions.put(entry.getKey(), entry.getValue());
+            }
         }
         this.offsetOutOfRangePartitions.clear();
-        if (!currentOutOfRangePartitions.isEmpty())
+        if (!currentOutOfRangePartitions.isEmpty()) {
             throw new OffsetOutOfRangeException(currentOutOfRangePartitions);
+        }
     }
 
     /**
@@ -366,7 +382,7 @@ public class Fetcher<K, V> {
         Map<TopicPartition, Long> copiedRecordTooLargePartitions = new HashMap<>(this.recordTooLargePartitions);
         this.recordTooLargePartitions.clear();
 
-        if (!copiedRecordTooLargePartitions.isEmpty())
+        if (!copiedRecordTooLargePartitions.isEmpty()) {
             throw new RecordTooLargeException("There are some messages at [Partition=Offset]: "
                 + copiedRecordTooLargePartitions
                 + " whose size is larger than the fetch size "
@@ -374,6 +390,7 @@ public class Fetcher<K, V> {
                 + " and hence cannot be ever returned."
                 + " Increase the fetch size, or decrease the maximum message size the broker will allow.",
                 copiedRecordTooLargePartitions);
+        }
     }
 
     /**
@@ -477,8 +494,9 @@ public class Fetcher<K, V> {
         short errorCode = lor.responseData().get(topicPartition).errorCode;
         if (errorCode == Errors.NONE.code()) {
             List<Long> offsets = lor.responseData().get(topicPartition).offsets;
-            if (offsets.size() != 1)
+            if (offsets.size() != 1) {
                 throw new IllegalStateException("This should not happen.");
+            }
             long offset = offsets.get(0);
             log.debug("Fetched offset {} for partition {}", offset, topicPartition);
 
@@ -588,10 +606,11 @@ public class Fetcher<K, V> {
                 this.metadata.requestUpdate();
             } else if (partition.errorCode == Errors.OFFSET_OUT_OF_RANGE.code()) {
                 long fetchOffset = request.fetchData().get(tp).offset;
-                if (subscriptions.hasDefaultOffsetResetPolicy())
+                if (subscriptions.hasDefaultOffsetResetPolicy()) {
                     subscriptions.needOffsetReset(tp);
-                else
+                } else {
                     this.offsetOutOfRangePartitions.put(tp, fetchOffset);
+                }
                 log.info("Fetch offset {} is out of range, resetting offset", fetchOffset);
             } else if (partition.errorCode == Errors.TOPIC_AUTHORIZATION_FAILED.code()) {
                 log.warn("Not authorized to read from topic {}.", tp.topic());
@@ -613,8 +632,9 @@ public class Fetcher<K, V> {
      */
     private ConsumerRecord<K, V> parseRecord(TopicPartition partition, LogEntry logEntry) {
         try {
-            if (this.checkCrcs)
+            if (this.checkCrcs) {
                 logEntry.record().ensureValid();
+            }
             long offset = logEntry.offset();
             ByteBuffer keyBytes = logEntry.record().key();
             K key = keyBytes == null ? null : this.keyDeserializer.deserialize(partition.topic(), Utils.toArray(keyBytes));
@@ -716,15 +736,17 @@ public class Fetcher<K, V> {
             // record bytes fetched
             String name = "topic." + topic + ".bytes-fetched";
             Sensor bytesFetched = this.metrics.getSensor(name);
-            if (bytesFetched == null)
+            if (bytesFetched == null) {
                 bytesFetched = this.metrics.sensor(name);
+            }
             bytesFetched.record(bytes);
 
             // record records fetched
             name = "topic." + topic + ".records-fetched";
             Sensor recordsFetched = this.metrics.getSensor(name);
-            if (recordsFetched == null)
+            if (recordsFetched == null) {
                 recordsFetched = this.metrics.sensor(name);
+            }
             recordsFetched.record(records);
         }
     }

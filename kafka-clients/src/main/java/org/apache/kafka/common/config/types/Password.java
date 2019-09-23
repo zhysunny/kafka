@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- *
+ * <p>
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -18,7 +18,9 @@
 package org.apache.kafka.common.config.types;
 
 /**
- * A wrapper class for passwords to hide them while logging a config
+ * 用于在记录配置时隐藏密码的包装器类
+ * @author 章云
+ * @date 2019/9/23 21:38
  */
 public class Password {
 
@@ -41,9 +43,10 @@ public class Password {
 
     @Override
     public boolean equals(Object obj) {
-        if (!(obj instanceof Password))
+        if (!(obj instanceof Password)) {
             return false;
-        Password other = (Password) obj;
+        }
+        Password other = (Password)obj;
         return value.equals(other.value);
     }
 
@@ -65,4 +68,5 @@ public class Password {
     public String value() {
         return value;
     }
+
 }

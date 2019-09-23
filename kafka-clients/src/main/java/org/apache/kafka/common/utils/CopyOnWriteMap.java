@@ -104,10 +104,11 @@ public class CopyOnWriteMap<K, V> implements ConcurrentMap<K, V> {
 
     @Override
     public synchronized V putIfAbsent(K k, V v) {
-        if (!containsKey(k))
+        if (!containsKey(k)) {
             return put(k, v);
-        else
+        } else {
             return get(k);
+        }
     }
 
     @Override
