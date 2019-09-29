@@ -3,9 +3,9 @@
  * file distributed with this work for additional information regarding copyright ownership. The ASF licenses this file
  * to You under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the
  * License. You may obtain a copy of the License at
- *
+ * <p>
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
@@ -22,32 +22,39 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * A convenient base class for configurations to extend.
- * <p>
- * This class holds both the original configuration that was provided as well as the parsed
+ * 一个方便扩展配置的基类。<br/>
+ * 该类既包含提供的原始配置，也包含已解析的配置
+ * @author 章云
+ * @date 2019/9/23 21:41
  */
 public class AbstractConfig {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    /* configs for which values have been requested, used to detect unused configs */
+    /**
+     * 已请求值的配置，用于检测未使用的配置
+     */
     private final Set<String> used;
 
-    /* the original values passed in by the user */
+    /**
+     * 用户传入的原始值
+     */
     private final Map<String, ?> originals;
 
-    /* the parsed values */
+    /**
+     * 解析值
+     */
     private final Map<String, Object> values;
 
     @SuppressWarnings("unchecked")
     public AbstractConfig(ConfigDef definition, Map<?, ?> originals, Boolean doLog) {
-        /* check that all the keys are really strings */
+        // 检查所有的键是否都是字符串
         for (Object key : originals.keySet()) {
             if (!(key instanceof String)) {
                 throw new ConfigException(key.toString(), originals.get(key), "Key must be a string.");
             }
         }
-        this.originals = (Map<String, ?>) originals;
+        this.originals = (Map<String, ?>)originals;
         this.values = definition.parse(this.originals);
         this.used = Collections.synchronizedSet(new HashSet<String>());
         if (doLog) {
@@ -72,40 +79,40 @@ public class AbstractConfig {
     }
 
     public Short getShort(String key) {
-        return (Short) get(key);
+        return (Short)get(key);
     }
 
     public Integer getInt(String key) {
-        return (Integer) get(key);
+        return (Integer)get(key);
     }
 
     public Long getLong(String key) {
-        return (Long) get(key);
+        return (Long)get(key);
     }
 
     public Double getDouble(String key) {
-        return (Double) get(key);
+        return (Double)get(key);
     }
 
     @SuppressWarnings("unchecked")
     public List<String> getList(String key) {
-        return (List<String>) get(key);
+        return (List<String>)get(key);
     }
 
     public boolean getBoolean(String key) {
-        return (Boolean) get(key);
+        return (Boolean)get(key);
     }
 
     public String getString(String key) {
-        return (String) get(key);
+        return (String)get(key);
     }
 
     public Password getPassword(String key) {
-        return (Password) get(key);
+        return (Password)get(key);
     }
 
     public Class<?> getClass(String key) {
-        return (Class<?>) get(key);
+        return (Class<?>)get(key);
     }
 
     public Set<String> unused() {
@@ -121,9 +128,9 @@ public class AbstractConfig {
     }
 
     /**
-     * Get all the original settings, ensuring that all values are of type String.
-     * @return the original settings
-     * @throw ClassCastException if any of the values are not strings
+     * 获取所有原始设置，确保所有值都是String类型的。
+     * @return 原来的设置
+     * @throw 如果其中任何值不是字符串，则ClassCastException
      */
     public Map<String, String> originalsStrings() {
         Map<String, String> copy = new RecordingMap<>();
@@ -131,14 +138,13 @@ public class AbstractConfig {
             if (!(entry.getValue() instanceof String)) {
                 throw new ClassCastException("Non-string value found in original settings");
             }
-            copy.put(entry.getKey(), (String) entry.getValue());
+            copy.put(entry.getKey(), (String)entry.getValue());
         }
         return copy;
     }
 
     /**
      * Gets all original settings with the given prefix, stripping the prefix before adding it to the output.
-     *
      * @param prefix the prefix to use as a filter
      * @return a Map containing the settings with the prefix
      */
@@ -183,9 +189,8 @@ public class AbstractConfig {
     /**
      * Get a configured instance of the give class specified by the given configuration key. If the object implements
      * Configurable configure it using the configuration.
-     *
      * @param key The configuration key for the class
-     * @param t The interface the class should implement
+     * @param t   The interface the class should implement
      * @return A configured instance of the class
      */
     public <T> T getConfiguredInstance(String key, Class<T> t) {
@@ -198,7 +203,7 @@ public class AbstractConfig {
             throw new KafkaException(c.getName() + " is not an instance of " + t.getName());
         }
         if (o instanceof Configurable) {
-            ((Configurable) o).configure(this.originals);
+            ((Configurable)o).configure(this.originals);
         }
         return t.cast(o);
     }
@@ -217,7 +222,7 @@ public class AbstractConfig {
                 throw new KafkaException(klass + " is not an instance of " + t.getName());
             }
             if (o instanceof Configurable) {
-                ((Configurable) o).configure(this.originals);
+                ((Configurable)o).configure(this.originals);
             }
             objects.add(t.cast(o));
         }
@@ -233,7 +238,7 @@ public class AbstractConfig {
             return false;
         }
 
-        AbstractConfig that = (AbstractConfig) o;
+        AbstractConfig that = (AbstractConfig)o;
 
         return originals.equals(that.originals);
     }
@@ -258,9 +263,11 @@ public class AbstractConfig {
         @Override
         public V get(Object key) {
             if (key instanceof String) {
-                ignore((String) key);
+                ignore((String)key);
             }
             return super.get(key);
         }
+
     }
+
 }
