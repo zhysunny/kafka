@@ -12,6 +12,7 @@
     <artifactId>kafka-clients</artifactId>
 
     <build>
+        <finalName>kafka-clients-${project.version}</finalName>
         <plugins>
             <!-- 打包插件 -->
             <plugin>

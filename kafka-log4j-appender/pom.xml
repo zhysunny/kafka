@@ -23,6 +23,7 @@
     </dependencies>
 
     <build>
+        <finalName>kafka-log4j-appender-${project.version}</finalName>
         <plugins>
             <!-- 打包插件 -->
             <plugin>

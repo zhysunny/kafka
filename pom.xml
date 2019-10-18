@@ -315,6 +315,7 @@
     </dependencies>
 
     <build>
+        <finalName>kafka_2.11-${project.version}</finalName>
         <pluginManagement>
             <plugins>
                 <!-- javadoc插件 -->

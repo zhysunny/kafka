@@ -23,6 +23,7 @@
     </dependencies>
 
     <build>
+        <finalName>connect-file-${project.version}</finalName>
         <plugins>
             <!-- 打包插件 -->
             <plugin>

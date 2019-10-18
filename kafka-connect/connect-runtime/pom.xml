@@ -19,6 +19,7 @@
     </dependencies>
 
     <build>
+        <finalName>connect-runtime-${project.version}</finalName>
         <plugins>
             <!-- 打包插件 -->
             <plugin>
