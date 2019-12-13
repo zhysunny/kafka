@@ -19,31 +19,6 @@
     </dependencies>
 
     <build>
-        <finalName>connect-runtime-${project.version}</finalName>
-        <plugins>
-            <!-- 打包插件 -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jar-plugin</artifactId>
-                <configuration>
-                    <archive>
-                        <manifest>
-                            <addClasspath>true</addClasspath>
-                            <classpathPrefix>lib</classpathPrefix>
-                        </manifest>
-                    </archive>
-                    <excludes>
-                    </excludes>
-                </configuration>
-            </plugin>
-            <plugin>
-                <artifactId>maven-assembly-plugin</artifactId>
-                <configuration>
-                    <!-- 禁止插件 -->
-                    <skipAssembly>true</skipAssembly>
-                </configuration>
-            </plugin>
-        </plugins>
     </build>
 
 </project>

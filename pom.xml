@@ -13,6 +13,7 @@
         <module>kafka-log4j-appender</module>
         <module>kafka-core</module>
         <module>kafka-connect</module>
+        <module>kafka-package</module>
     </modules>
     <packaging>pom</packaging>
 
@@ -43,42 +44,42 @@
     <dependencyManagement>
         <dependencies>
             <dependency>
-                <groupId>org.apache.kafka</groupId>
+                <groupId>${project.groupId}</groupId>
                 <artifactId>kafka-clients</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.apache.kafka</groupId>
+                <groupId>${project.groupId}</groupId>
                 <artifactId>connect-api</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.apache.kafka</groupId>
+                <groupId>${project.groupId}</groupId>
                 <artifactId>connect-file</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.apache.kafka</groupId>
+                <groupId>${project.groupId}</groupId>
                 <artifactId>connect-json</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.apache.kafka</groupId>
+                <groupId>${project.groupId}</groupId>
                 <artifactId>connect-runtime</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.apache.kafka</groupId>
+                <groupId>${project.groupId}</groupId>
                 <artifactId>kafka-core</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.apache.kafka</groupId>
+                <groupId>${project.groupId}</groupId>
                 <artifactId>kafka-log4j-appender</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.apache.kafka</groupId>
+                <groupId>${project.groupId}</groupId>
                 <artifactId>kafka-tools</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -241,7 +242,30 @@
             <version>${slf4j.version}</version>
         </dependency>
         <!-- logger end -->
-
+        <!-- scala start -->
+        <dependency>
+            <groupId>org.scala-lang</groupId>
+            <artifactId>scala-library</artifactId>
+            <version>${scala.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.scala-lang.modules</groupId>
+            <artifactId>scala-parser-combinators_2.11</artifactId>
+            <version>1.0.4</version>
+        </dependency>
+        <!-- scala end -->
+        <!-- zookeeper start -->
+        <dependency>
+            <groupId>com.101tec</groupId>
+            <artifactId>zkclient</artifactId>
+            <version>0.7</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.zookeeper</groupId>
+            <artifactId>zookeeper</artifactId>
+            <version>3.4.6</version>
+        </dependency>
+        <!-- zookeeper end -->
         <dependency>
             <groupId>net.sourceforge.argparse4j</groupId>
             <artifactId>argparse4j</artifactId>
@@ -302,20 +326,9 @@
             <artifactId>snappy-java</artifactId>
             <version>1.1.1.7</version>
         </dependency>
-        <dependency>
-            <groupId>com.101tec</groupId>
-            <artifactId>zkclient</artifactId>
-            <version>0.7</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.zookeeper</groupId>
-            <artifactId>zookeeper</artifactId>
-            <version>3.4.6</version>
-        </dependency>
     </dependencies>
 
     <build>
-        <finalName>kafka_2.11-${project.version}</finalName>
         <pluginManagement>
             <plugins>
                 <!-- javadoc插件 -->
@@ -335,23 +348,16 @@
                     <encoding>${compiler.encoding}</encoding>
                 </configuration>
             </plugin>
+            <!-- 打包插件 -->
             <plugin>
-                <artifactId>maven-assembly-plugin</artifactId>
-                <configuration>
-                    <!-- 打包后的包名是否包含assembly的id名 -->
-                    <appendAssemblyId>false</appendAssemblyId>
-                    <descriptors>
-                        <!-- 引用的assembly配置文件，可以用多个，即可以同时打包多个格式的包 -->
-                        <descriptor>gzip.xml</descriptor>
-                        <descriptor>dir.xml</descriptor>
-                    </descriptors>
-                </configuration>
+                <groupId>org.scala-tools</groupId>
+                <artifactId>maven-scala-plugin</artifactId>
+                <version>2.15.2</version>
                 <executions>
                     <execution>
-                        <id>make-assembly</id>
-                        <phase>package</phase>
                         <goals>
-                            <goal>single</goal>
+                            <goal>compile</goal>
+                            <goal>testCompile</goal>
                         </goals>
                     </execution>
                 </executions>
