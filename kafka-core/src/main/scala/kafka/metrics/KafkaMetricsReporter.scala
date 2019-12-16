@@ -54,6 +54,7 @@ object KafkaMetricsReporter {
     ReporterStarted synchronized {
       if (!ReporterStarted.get()) {
         val metricsConfig = new KafkaMetricsConfig(verifiableProps)
+        // 需要配置kafka.metrics.reporters
         if(metricsConfig.reporters.size > 0) {
           metricsConfig.reporters.foreach(reporterType => {
             val reporter = CoreUtils.createObject[KafkaMetricsReporter](reporterType)

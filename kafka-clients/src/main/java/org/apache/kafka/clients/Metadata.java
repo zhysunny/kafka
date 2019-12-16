@@ -37,13 +37,35 @@ public final class Metadata {
 
     private static final Logger log = LoggerFactory.getLogger(Metadata.class);
 
+    /**
+     * 更新失败的情况下，下1次更新的补偿时间（这个变量在代码中意义不是太大）
+     */
     private final long refreshBackoffMs;
+    /**
+     * 关键值：每隔多久，更新一次。缺省是600*1000，也就是10分种
+     */
     private final long metadataExpireMs;
+    /**
+     * 每更新成功1次，version递增1。这个变量主要用于在while循环，wait的时候，作为循环判断条件
+     */
     private int version;
+    /**
+     * 上一次更新时间（也包含更新失败的情况）
+     */
     private long lastRefreshMs;
+    /**
+     * 上一次成功更新的时间（如果每次都成功的话，则2者相等。否则，lastSuccessulRefreshMs < lastRefreshMs)
+     */
     private long lastSuccessfulRefreshMs;
+    /**
+     * 集群配置信息
+     */
     private Cluster cluster;
+    /**
+     * 是否强制刷新
+     */
     private boolean needUpdate;
+
     private final Set<String> topics;
     private final List<Listener> listeners;
     private boolean needMetadataForAllTopics;

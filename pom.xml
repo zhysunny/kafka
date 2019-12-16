@@ -26,6 +26,7 @@
         <jersey.version>2.22.1</jersey.version>
         <jetty.version>9.2.12.v20150709</jetty.version>
         <slf4j.version>1.7.6</slf4j.version>
+        <argLine>-Dfile.encoding=UTF-8</argLine>
     </properties>
 
     <repositories>
@@ -87,20 +88,27 @@
             <dependency>
                 <groupId>junit</groupId>
                 <artifactId>junit</artifactId>
-                <version>4.5</version>
-                <scope>test</scope>
+                <version>4.7</version>
             </dependency>
             <dependency>
                 <groupId>org.hamcrest</groupId>
                 <artifactId>hamcrest-core</artifactId>
                 <version>1.2</version>
-                <scope>test</scope>
             </dependency>
             <dependency>
                 <groupId>org.hamcrest</groupId>
                 <artifactId>hamcrest-library</artifactId>
                 <version>1.2</version>
-                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.powermock</groupId>
+                <artifactId>powermock-api-mockito2</artifactId>
+                <version>2.0.4</version>
+            </dependency>
+            <dependency>
+                <groupId>org.powermock</groupId>
+                <artifactId>powermock-module-junit4</artifactId>
+                <version>2.0.4</version>
             </dependency>
             <!-- junit end -->
         </dependencies>
@@ -329,15 +337,6 @@
     </dependencies>
 
     <build>
-        <pluginManagement>
-            <plugins>
-                <!-- javadoc插件 -->
-                <plugin>
-                    <artifactId>maven-javadoc-plugin</artifactId>
-                    <version>2.9.1</version>
-                </plugin>
-            </plugins>
-        </pluginManagement>
         <plugins>
             <!-- 打工程包插件 -->
             <plugin>
@@ -359,6 +358,41 @@
                             <goal>compile</goal>
                             <goal>testCompile</goal>
                         </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <!-- 单元测试是否跳过 -->
+            <plugin>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <!-- true不执行单元测试-->
+                    <skip>false</skip>
+                </configuration>
+            </plugin>
+            <!-- 单元测试覆盖率 -->
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>0.8.2</version>
+                <executions>
+                    <execution>
+                        <id>prepare-integration-tests</id>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                        <configuration>
+                            <destFile>${basedir}/target/coverage-reports/jacoco-unit.exec</destFile>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>jacoco-site</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                        <configuration>
+                            <dataFile>${basedir}/target/coverage-reports/jacoco-unit.exec</dataFile>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>

@@ -46,6 +46,7 @@ public class JmxReporter implements MetricsReporter {
     private String prefix;
     private final Map<String, KafkaMbean> mbeans = new HashMap<String, KafkaMbean>();
 
+    @Deprecated
     public JmxReporter() {
         this("");
     }
