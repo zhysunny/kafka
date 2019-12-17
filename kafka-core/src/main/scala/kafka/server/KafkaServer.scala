@@ -170,10 +170,10 @@ class KafkaServer(val config: KafkaConfig, time: Time = SystemTime, threadNamePr
 
         brokerState.newState(Starting)
 
-        /* start scheduler */
+        // 初始化kafka调度线程池
         kafkaScheduler.startup()
 
-        /* setup zookeeper */
+        // 初始化zookeeper连接，并创建kafka节点
         zkUtils = initZk()
 
         /* start log manager */
@@ -273,6 +273,7 @@ class KafkaServer(val config: KafkaConfig, time: Time = SystemTime, threadNamePr
       throw new java.lang.SecurityException("zkEnableSecureAcls is true, but the verification of the JAAS login file failed.")
     }
     if (chroot.length > 1) {
+      // 一般配置zk连接没有“/”，这里不走
       val zkConnForChrootCreation = config.zkConnect.substring(0, config.zkConnect.indexOf("/"))
       val zkClientForChrootCreation = ZkUtils(zkConnForChrootCreation,
         config.zkSessionTimeoutMs,
@@ -287,6 +288,7 @@ class KafkaServer(val config: KafkaConfig, time: Time = SystemTime, threadNamePr
       config.zkSessionTimeoutMs,
       config.zkConnectionTimeoutMs,
       secureAclsEnabled)
+    // 创建zk节点
     zkUtils.setupCommonPaths()
     zkUtils
   }
@@ -581,8 +583,8 @@ class KafkaServer(val config: KafkaConfig, time: Time = SystemTime, threadNamePr
   def boundPort(protocol: SecurityProtocol = SecurityProtocol.PLAINTEXT): Int = socketServer.boundPort(protocol)
 
   private def createLogManager(zkClient: ZkClient, brokerState: BrokerState): LogManager = {
-    val defaultProps = KafkaServer.copyKafkaConfigToLog(config)
-    val defaultLogConfig = LogConfig(defaultProps)
+    val defaultProps: util.Map[String, Object] = KafkaServer.copyKafkaConfigToLog(config)
+    val defaultLogConfig: LogConfig = LogConfig(defaultProps)
 
     val configs = AdminUtils.fetchAllTopicConfigs(zkUtils).mapValues(LogConfig.fromProps(defaultProps, _))
     // read the log configurations from zookeeper

@@ -716,21 +716,26 @@ class KafkaConfig(val props: java.util.Map[_, _], doLog: Boolean) extends Abstra
   def this(props: java.util.Map[_, _]) = this(props, true)
 
   /** ********* Zookeeper Configuration ***********/
-  // zookeeper.connect  无默认值，必填
+  // zookeeper.connect  无默认值，必填  Zookeeper主机地址
   val zkConnect: String = getString(KafkaConfig.ZkConnectProp)
-  // zookeeper.session.timeout.ms  default=6000
+  // zookeeper.session.timeout.ms  default=6000  ZooKeeper的session的超时时间
   val zkSessionTimeoutMs: Int = getInt(KafkaConfig.ZkSessionTimeoutMsProp)
-  // zookeeper.connection.timeout.ms  默认值同zookeeper.session.timeout.ms
+  // zookeeper.connection.timeout.ms  默认值同zookeeper.session.timeout.ms  与ZK server建立连接的超时时间
   val zkConnectionTimeoutMs: Int =
     Option(getInt(KafkaConfig.ZkConnectionTimeoutMsProp)).map(_.toInt).getOrElse(getInt(KafkaConfig.ZkSessionTimeoutMsProp))
+  // zookeeper.sync.time.ms  default=2000  ZK follower同步可落后leader多久
   val zkSyncTimeMs: Int = getInt(KafkaConfig.ZkSyncTimeMsProp)
-  // zookeeper.set.acl  default=false
+  // zookeeper.set.acl  default=false  ZooKeeper客户端连接是否设置ACL安全
   val zkEnableSecureAcls: Boolean = getBoolean(KafkaConfig.ZkEnableSecureAclsProp)
 
   /** ********* General Configuration ***********/
+  // broker.id.generation.enable  default=true  是否允许服务器自动生成broker.id。如果允许则产生的值会交由reserved.broker.max.id审核
   val brokerIdGenerationEnable: Boolean = getBoolean(KafkaConfig.BrokerIdGenerationEnableProp)
+  // reserved.broker.max.id  default=1000  broker.id取值范围，默认0-1000，可以用于broker.id的最大数量
   val maxReservedBrokerId: Int = getInt(KafkaConfig.MaxReservedBrokerIdProp)
+  // broker.id  默认-1，不在0-1000范围内，报错，必填项，用于服务的broker id。如果没设置，将生存一个唯一broker id。为了避免ZooKeeper生成的id和用户配置的broker id相冲突，生成的id将在reserved.broker.max.id的值基础上加1。
   var brokerId: Int = getInt(KafkaConfig.BrokerIdProp)
+  // num.network.threads  default=3  服务器用于从接收网络请求并发送网络响应的线程数
   val numNetworkThreads = getInt(KafkaConfig.NumNetworkThreadsProp)
   // background.threads  default=10
   val backgroundThreads = getInt(KafkaConfig.BackgroundThreadsProp)
@@ -740,12 +745,17 @@ class KafkaConfig(val props: java.util.Map[_, _], doLog: Boolean) extends Abstra
   val requestTimeoutMs = getInt(KafkaConfig.RequestTimeoutMsProp)
 
   /** *********** Authorizer Configuration ***********/
+  // authorizer.class.name  default=""
   val authorizerClassName: String = getString(KafkaConfig.AuthorizerClassNameProp)
 
   /** ********* Socket Server Configuration ***********/
+  // host.name  default=""
   val hostName = getString(KafkaConfig.HostNameProp)
+  // port  default=9092
   val port = getInt(KafkaConfig.PortProp)
+  // advertised.host.name  default=""
   val advertisedHostName = Option(getString(KafkaConfig.AdvertisedHostNameProp)).getOrElse(hostName)
+  // advertised.port  default=9092
   val advertisedPort: java.lang.Integer = Option(getInt(KafkaConfig.AdvertisedPortProp)).getOrElse(port)
 
   val socketSendBufferBytes = getInt(KafkaConfig.SocketSendBufferBytesProp)
@@ -759,6 +769,7 @@ class KafkaConfig(val props: java.util.Map[_, _], doLog: Boolean) extends Abstra
   /** ********* Log Configuration ***********/
   val autoCreateTopicsEnable = getBoolean(KafkaConfig.AutoCreateTopicsEnableProp)
   val numPartitions = getInt(KafkaConfig.NumPartitionsProp)
+  // log.dirs  默认为空，必填
   val logDirs = CoreUtils.parseCsvList(Option(getString(KafkaConfig.LogDirsProp)).getOrElse(getString(KafkaConfig.LogDirProp)))
   val logSegmentBytes = getInt(KafkaConfig.LogSegmentBytesProp)
   val logFlushIntervalMessages = getLong(KafkaConfig.LogFlushIntervalMessagesProp)
@@ -870,7 +881,7 @@ class KafkaConfig(val props: java.util.Map[_, _], doLog: Boolean) extends Abstra
 
   val deleteTopicEnable = getBoolean(KafkaConfig.DeleteTopicEnableProp)
   val compressionType = getString(KafkaConfig.CompressionTypeProp)
-
+  // listeners
   val listeners = getListeners
   val advertisedListeners = getAdvertisedListeners
 

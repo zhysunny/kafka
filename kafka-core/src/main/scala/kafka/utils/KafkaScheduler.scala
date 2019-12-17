@@ -77,8 +77,11 @@ class KafkaScheduler(val threads: Int,
       if(isStarted)
         throw new IllegalStateException("This scheduler has already been started!")
       executor = new ScheduledThreadPoolExecutor(threads)
+      // 设置关于是否继续执行现有周期性任务的策略，即使该执行者已经是 shutdown 。
       executor.setContinueExistingPeriodicTasksAfterShutdownPolicy(false)
+      // 设置关于是否执行现有延迟任务的策略，即使该执行者已经是 shutdown 。
       executor.setExecuteExistingDelayedTasksAfterShutdownPolicy(false)
+      // 设置用于创建新线程的线程工厂。
       executor.setThreadFactory(new ThreadFactory() {
                                   def newThread(runnable: Runnable): Thread = 
                                     Utils.newThread(threadNamePrefix + schedulerThreadId.getAndIncrement(), runnable, daemon)

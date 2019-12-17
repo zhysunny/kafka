@@ -45,4 +45,8 @@ object KafkaTest {
   def afterClass: Unit = {
     println("Test KafkaTest Class End...");
   }
+
+  def main(args: Array[String]): Unit = {
+    Kafka.main(Array[String]("../resources/config/server.properties"))
+  }
 }
