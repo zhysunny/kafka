@@ -257,6 +257,7 @@ public class ProducerPerformance {
             this.bytes = bytes;
         }
 
+        @Override
         public void onCompletion(RecordMetadata metadata, Exception exception) {
             long now = System.currentTimeMillis();
             int latency = (int) (now - start);

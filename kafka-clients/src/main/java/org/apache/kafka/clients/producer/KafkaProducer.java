@@ -225,12 +225,14 @@ public class KafkaProducer<K, V> implements Producer<K, V> {
              * This should be removed with release 0.9 when the deprecated configs are removed.
              */
             if (userProvidedConfigs.containsKey(ProducerConfig.BLOCK_ON_BUFFER_FULL_CONFIG)) {
+                // block.on.buffer.full  default=false  必须自定义，否则不存在
                 log.warn(ProducerConfig.BLOCK_ON_BUFFER_FULL_CONFIG + " config is deprecated and will be removed soon. " +
                         "Please use " + ProducerConfig.MAX_BLOCK_MS_CONFIG);
                 boolean blockOnBufferFull = config.getBoolean(ProducerConfig.BLOCK_ON_BUFFER_FULL_CONFIG);
                 if (blockOnBufferFull) {
                     this.maxBlockTimeMs = Long.MAX_VALUE;
                 } else if (userProvidedConfigs.containsKey(ProducerConfig.METADATA_FETCH_TIMEOUT_CONFIG)) {
+                    // metadata.fetch.timeout.ms  default=60000  必须自定义，否则不存在
                     log.warn(ProducerConfig.METADATA_FETCH_TIMEOUT_CONFIG + " config is deprecated and will be removed soon. " +
                             "Please use " + ProducerConfig.MAX_BLOCK_MS_CONFIG);
                     this.maxBlockTimeMs = config.getLong(ProducerConfig.METADATA_FETCH_TIMEOUT_CONFIG);
@@ -238,10 +240,12 @@ public class KafkaProducer<K, V> implements Producer<K, V> {
                     this.maxBlockTimeMs = config.getLong(ProducerConfig.MAX_BLOCK_MS_CONFIG);
                 }
             } else if (userProvidedConfigs.containsKey(ProducerConfig.METADATA_FETCH_TIMEOUT_CONFIG)) {
+                // metadata.fetch.timeout.ms  default=60000  必须自定义，否则不存在
                 log.warn(ProducerConfig.METADATA_FETCH_TIMEOUT_CONFIG + " config is deprecated and will be removed soon. " +
                         "Please use " + ProducerConfig.MAX_BLOCK_MS_CONFIG);
                 this.maxBlockTimeMs = config.getLong(ProducerConfig.METADATA_FETCH_TIMEOUT_CONFIG);
             } else {
+                // max.block.ms  default=60000
                 this.maxBlockTimeMs = config.getLong(ProducerConfig.MAX_BLOCK_MS_CONFIG);
             }
 
@@ -250,15 +254,18 @@ public class KafkaProducer<K, V> implements Producer<K, V> {
              * This should be removed with release 0.9
              */
             if (userProvidedConfigs.containsKey(ProducerConfig.TIMEOUT_CONFIG)) {
+                // timeout.ms  default=30000  必须自定义，否则不存在
                 log.warn(ProducerConfig.TIMEOUT_CONFIG + " config is deprecated and will be removed soon. Please use " +
                         ProducerConfig.REQUEST_TIMEOUT_MS_CONFIG);
                 this.requestTimeoutMs = config.getInt(ProducerConfig.TIMEOUT_CONFIG);
             } else {
+                // request.timeout.ms  default=30000
                 this.requestTimeoutMs = config.getInt(ProducerConfig.REQUEST_TIMEOUT_MS_CONFIG);
             }
 
             Map<String, String> metricTags = new LinkedHashMap<String, String>();
             metricTags.put("client-id", clientId);
+            // batch.size  default=16348
             this.accumulator = new RecordAccumulator(config.getInt(ProducerConfig.BATCH_SIZE_CONFIG),
                     this.totalMemorySize,
                     this.compressionType,
@@ -267,6 +274,7 @@ public class KafkaProducer<K, V> implements Producer<K, V> {
                     metrics,
                     time,
                     metricTags);
+            // bootstrap.servers
             List<InetSocketAddress> addresses = ClientUtils.parseAndValidateAddresses(config.getList(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG));
             this.metadata.update(Cluster.bootstrap(addresses), time.milliseconds());
             ChannelBuilder channelBuilder = ClientUtils.createChannelBuilder(config.values());
@@ -279,6 +287,7 @@ public class KafkaProducer<K, V> implements Producer<K, V> {
                     config.getInt(ProducerConfig.SEND_BUFFER_CONFIG),
                     config.getInt(ProducerConfig.RECEIVE_BUFFER_CONFIG),
                     this.requestTimeoutMs, time);
+            //构造一个sender。sender本身实现的是Runnable接口
             this.sender = new Sender(client,
                     this.metadata,
                     this.accumulator,
@@ -291,6 +300,7 @@ public class KafkaProducer<K, V> implements Producer<K, V> {
                     this.requestTimeoutMs);
             String ioThreadName = "kafka-producer-network-thread" + (clientId.length() > 0 ? " | " + clientId : "");
             this.ioThread = new KafkaThread(ioThreadName, this.sender, true);
+            //一个线程，开启sender
             this.ioThread.start();
 
             this.errors = this.metrics.sensor("errors");
@@ -475,15 +485,20 @@ public class KafkaProducer<K, V> implements Producer<K, V> {
         }
 
         if (metadata.fetch().partitionsForTopic(topic) != null) {
+            //取到topic的配置信息，直接返回
             return 0;
         }
 
         long begin = time.milliseconds();
         long remainingWaitMs = maxWaitMs;
         while (metadata.fetch().partitionsForTopic(topic) == null) {
+            //取不到topic的配置信息，一直死循环wait，直到超时，抛TimeoutException
             log.trace("Requesting metadata update for topic {}.", topic);
+            //把needUpdate置为true
             int version = metadata.requestUpdate();
+            //唤起sender
             sender.wakeup();
+            //metadata的关键函数
             metadata.awaitUpdate(version, remainingWaitMs);
             long elapsed = time.milliseconds() - begin;
             if (elapsed >= maxWaitMs) {

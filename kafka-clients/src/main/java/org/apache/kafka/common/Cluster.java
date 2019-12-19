@@ -3,9 +3,9 @@
  * file distributed with this work for additional information regarding copyright ownership. The ASF licenses this file
  * to You under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the
  * License. You may obtain a copy of the License at
- * 
+ * <p>
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ * <p>
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
@@ -18,33 +18,56 @@ import java.net.InetSocketAddress;
 import java.util.*;
 
 /**
- * A representation of a subset of the nodes, topics, and partitions in the Kafka cluster.
+ * 集群信息
+ * @author 章云
+ * @date 2019/12/19 14:42
  */
 public final class Cluster {
 
+    /**
+     * 集群列表，每个Node代表一个broker
+     */
     private final List<Node> nodes;
+    /**
+     * 未认证的topic列表
+     */
     private final Set<String> unauthorizedTopics;
+    /**
+     * topic partition 映射关系
+     */
     private final Map<TopicPartition, PartitionInfo> partitionsByTopicPartition;
+    /**
+     * 集群每个topic下的分区信息
+     */
     private final Map<String, List<PartitionInfo>> partitionsByTopic;
+    /**
+     * 集群每个可用topic下的分区信息
+     */
     private final Map<String, List<PartitionInfo>> availablePartitionsByTopic;
+    /**
+     * 集群每个Broker下的分区信息
+     */
     private final Map<Integer, List<PartitionInfo>> partitionsByNode;
+    /**
+     * 集群每个Broker信息
+     */
     private final Map<Integer, Node> nodesById;
 
     /**
      * Create a new cluster with the given nodes and partitions
-     * @param nodes The nodes in the cluster
+     * @param nodes      The nodes in the cluster
      * @param partitions Information about a subset of the topic-partitions this cluster hosts
      */
-    public Cluster(Collection<Node> nodes,
-                   Collection<PartitionInfo> partitions,
-                   Set<String> unauthorizedTopics) {
+    public Cluster(Collection<Node> nodes, Collection<PartitionInfo> partitions, Set<String> unauthorizedTopics) {
         // make a randomized, unmodifiable copy of the nodes
         List<Node> copy = new ArrayList<>(nodes);
+        // 使用默认的随机源随机排列指定的列表。
         Collections.shuffle(copy);
+        // 返回指定列表的不可修改视图。
         this.nodes = Collections.unmodifiableList(copy);
-        
+
         this.nodesById = new HashMap<>();
-        for (Node node: nodes) {
+        for (Node node : nodes) {
             this.nodesById.put(node.id(), node);
         }
 
@@ -123,7 +146,7 @@ public final class Cluster {
     public List<Node> nodes() {
         return this.nodes;
     }
-    
+
     /**
      * Get the node by the node id (or null if no such node exists)
      * @param id The id of the node

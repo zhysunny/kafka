@@ -94,15 +94,15 @@ public class Sender implements Runnable {
     private final int requestTimeout;
 
     public Sender(KafkaClient client,
-                  Metadata metadata,
-                  RecordAccumulator accumulator,
-                  int maxRequestSize,
-                  short acks,
-                  int retries,
-                  Metrics metrics,
-                  Time time,
-                  String clientId,
-                  int requestTimeout) {
+    Metadata metadata,
+    RecordAccumulator accumulator,
+    int maxRequestSize,
+    short acks,
+    int retries,
+    Metrics metrics,
+    Time time,
+    String clientId,
+    int requestTimeout) {
         this.client = client;
         this.accumulator = accumulator;
         this.metadata = metadata;
@@ -160,17 +160,16 @@ public class Sender implements Runnable {
 
     /**
      * Run a single iteration of sending
-     *
-     * @param now
-     *            The current POSIX time in milliseconds
+     * @param now The current POSIX time in milliseconds
      */
     public void run(long now) {
         Cluster cluster = metadata.fetch();
-        // get the list of partitions with data ready to send
+        //遍历消息队列中所有的消息，找出对应的，已经ready的Node
         RecordAccumulator.ReadyCheckResult result = this.accumulator.ready(cluster, now);
 
         // if there are any partitions whose leaders are not known yet, force metadata update
         if (result.unknownLeadersExist) {
+            //如果一个ready的node都没有，请求更新metadata
             this.metadata.requestUpdate();
         }
 
@@ -186,10 +185,7 @@ public class Sender implements Runnable {
         }
 
         // create produce requests
-        Map<Integer, List<RecordBatch>> batches = this.accumulator.drain(cluster,
-                result.readyNodes,
-                this.maxRequestSize,
-                now);
+        Map<Integer, List<RecordBatch>> batches = this.accumulator.drain(cluster, result.readyNodes, this.maxRequestSize, now);
 
         List<RecordBatch> expiredBatches = this.accumulator.abortExpiredBatches(this.requestTimeout, cluster, now);
         // update sensors
@@ -209,6 +205,7 @@ public class Sender implements Runnable {
             log.trace("Created {} produce requests: {}", requests.size(), requests);
             pollTimeout = 0;
         }
+        //client的2个关键函数，一个发送ClientRequest，一个接收ClientResponse。底层调用的是NIO的poll。
         for (ClientRequest request : requests) {
             client.send(request, now);
         }
@@ -244,20 +241,20 @@ public class Sender implements Runnable {
         int correlationId = response.request().request().header().correlationId();
         if (response.wasDisconnected()) {
             log.trace("Cancelled request {} due to node {} being disconnected", response, response.request()
-                    .request()
-                    .destination());
+            .request()
+            .destination());
             for (RecordBatch batch : batches.values()) {
                 completeBatch(batch, Errors.NETWORK_EXCEPTION, -1L, correlationId, now);
             }
         } else {
             log.trace("Received produce response from node {} with correlation id {}",
-                    response.request().request().destination(),
-                    correlationId);
+            response.request().request().destination(),
+            correlationId);
             // if we have a response, parse it
             if (response.hasResponse()) {
                 ProduceResponse produceResponse = new ProduceResponse(response.responseBody());
                 for (Map.Entry<TopicPartition, ProduceResponse.PartitionResponse> entry : produceResponse.responses()
-                        .entrySet()) {
+                .entrySet()) {
                     TopicPartition tp = entry.getKey();
                     ProduceResponse.PartitionResponse partResp = entry.getValue();
                     Errors error = Errors.forCode(partResp.errorCode);
@@ -266,7 +263,7 @@ public class Sender implements Runnable {
                 }
                 this.sensors.recordLatency(response.request().request().destination(), response.requestLatencyMs());
                 this.sensors.recordThrottleTime(response.request().request().destination(),
-                        produceResponse.getThrottleTime());
+                produceResponse.getThrottleTime());
             } else {
                 // this is the acks = 0 case, just complete all requests
                 for (RecordBatch batch : batches.values()) {
@@ -278,21 +275,20 @@ public class Sender implements Runnable {
 
     /**
      * Complete or retry the given batch of records.
-     *
-     * @param batch The record batch
-     * @param error The error (or null if none)
-     * @param baseOffset The base offset assigned to the records if successful
+     * @param batch         The record batch
+     * @param error         The error (or null if none)
+     * @param baseOffset    The base offset assigned to the records if successful
      * @param correlationId The correlation id for the request
-     * @param now The current POSIX time stamp in milliseconds
+     * @param now           The current POSIX time stamp in milliseconds
      */
     private void completeBatch(RecordBatch batch, Errors error, long baseOffset, long correlationId, long now) {
         if (error != Errors.NONE && canRetry(batch, error)) {
             // retry
             log.warn("Got error produce response with correlation id {} on topic-partition {}, retrying ({} attempts left). Error: {}",
-                    correlationId,
-                    batch.topicPartition,
-                    this.retries - batch.attempts - 1,
-                    error);
+            correlationId,
+            batch.topicPartition,
+            this.retries - batch.attempts - 1,
+            error);
             this.accumulator.reenqueue(batch, now);
             this.sensors.recordRetries(batch.topicPartition.topic(), batch.recordCount);
         } else {
@@ -310,6 +306,7 @@ public class Sender implements Runnable {
             }
         }
         if (error.exception() instanceof InvalidMetadataException) {
+            // 返回的response和请求对不上的时候
             metadata.requestUpdate();
         }
     }
@@ -345,8 +342,8 @@ public class Sender implements Runnable {
         }
         ProduceRequest request = new ProduceRequest(acks, timeout, produceRecordsByPartition);
         RequestSend send = new RequestSend(Integer.toString(destination),
-                this.client.nextRequestHeader(ApiKeys.PRODUCE),
-                request.toStruct());
+        this.client.nextRequestHeader(ApiKeys.PRODUCE),
+        request.toStruct());
         RequestCompletionHandler callback = new RequestCompletionHandler() {
             @Override
             public void onComplete(ClientResponse response) {
@@ -386,7 +383,8 @@ public class Sender implements Runnable {
             String metricGrpName = "producer-metrics";
 
             this.batchSizeSensor = metrics.sensor("batch-size");
-            MetricName m = new MetricName("batch-size-avg", metricGrpName, "The average number of bytes sent per partition per-request.", metricTags);
+            MetricName m = new MetricName("batch-size-avg", metricGrpName, "The average number of bytes sent per partition per-request.",
+            metricTags);
             this.batchSizeSensor.add(m, new Avg());
             m = new MetricName("batch-size-max", metricGrpName, "The max number of bytes sent per partition per-request.", metricTags);
             this.batchSizeSensor.add(m, new Max());
@@ -396,9 +394,11 @@ public class Sender implements Runnable {
             this.compressionRateSensor.add(m, new Avg());
 
             this.queueTimeSensor = metrics.sensor("queue-time");
-            m = new MetricName("record-queue-time-avg", metricGrpName, "The average time in ms record batches spent in the record accumulator.", metricTags);
+            m = new MetricName("record-queue-time-avg", metricGrpName,
+            "The average time in ms record batches spent in the record accumulator.", metricTags);
             this.queueTimeSensor.add(m, new Avg());
-            m = new MetricName("record-queue-time-max", metricGrpName, "The maximum time in ms record batches spent in the record accumulator.", metricTags);
+            m = new MetricName("record-queue-time-max", metricGrpName,
+            "The maximum time in ms record batches spent in the record accumulator.", metricTags);
             this.queueTimeSensor.add(m, new Max());
 
             this.requestTimeSensor = metrics.sensor("request-time");
@@ -424,7 +424,8 @@ public class Sender implements Runnable {
             this.retrySensor.add(m, new Rate());
 
             this.errorSensor = metrics.sensor("errors");
-            m = new MetricName("record-error-rate", metricGrpName, "The average per-second number of record sends that resulted in errors", metricTags);
+            m = new MetricName("record-error-rate", metricGrpName, "The average per-second number of record sends that resulted in errors",
+            metricTags);
             this.errorSensor.add(m, new Rate());
 
             this.maxRecordSizeSensor = metrics.sensor("record-size-max");
@@ -433,14 +434,16 @@ public class Sender implements Runnable {
             m = new MetricName("record-size-avg", metricGrpName, "The average record size", metricTags);
             this.maxRecordSizeSensor.add(m, new Avg());
 
-            m = new MetricName("requests-in-flight", metricGrpName, "The current number of in-flight requests awaiting a response.", metricTags);
+            m = new MetricName("requests-in-flight", metricGrpName, "The current number of in-flight requests awaiting a response.",
+            metricTags);
             this.metrics.addMetric(m, new Measurable() {
                 @Override
                 public double measure(MetricConfig config, long now) {
                     return client.inFlightRequestCount();
                 }
             });
-            m = new MetricName("metadata-age", metricGrpName, "The age in seconds of the current producer metadata being used.", metricTags);
+            m = new MetricName("metadata-age", metricGrpName, "The age in seconds of the current producer metadata being used.",
+            metricTags);
             metrics.addMetric(m, new Measurable() {
                 @Override
                 public double measure(MetricConfig config, long now) {

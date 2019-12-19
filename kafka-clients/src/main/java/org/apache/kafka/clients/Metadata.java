@@ -3,9 +3,9 @@
  * file distributed with this work for additional information regarding copyright ownership. The ASF licenses this file
  * to You under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the
  * License. You may obtain a copy of the License at
- * 
+ * <p>
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ * <p>
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
@@ -29,7 +29,7 @@ import org.slf4j.LoggerFactory;
  * A class encapsulating some of the logic around metadata.
  * <p>
  * This class is shared by the client thread (for partitioning) and the background sender thread.
- * 
+ *
  * Metadata is maintained for only a subset of topics, which can be added to over time. When we request metadata for a
  * topic we don't have any metadata for it will trigger a metadata update.
  */
@@ -139,11 +139,15 @@ public final class Metadata {
         long begin = System.currentTimeMillis();
         long remainingWaitMs = maxWaitMs;
         while (this.version <= lastVersion) {
+            //当Sender成功更新meatadata之后，version加1。否则会循环，一直wait
             if (remainingWaitMs != 0) {
+                //线程的wait机制，wait和synchronized的配合使用
+                //notify在Sender更新Metadata的时候发出。
                 wait(remainingWaitMs);
             }
             long elapsed = System.currentTimeMillis() - begin;
             if (elapsed >= maxWaitMs) {
+                //wait时间超出了最长等待时间
                 throw new TimeoutException("Failed to update metadata after " + maxWaitMs + " ms.");
             }
             remainingWaitMs = maxWaitMs - elapsed;
@@ -179,7 +183,7 @@ public final class Metadata {
     }
 
     /**
-     * Update the cluster metadata
+     * 更新成功，version+1, 同时更新其它字段
      */
     public synchronized void update(Cluster cluster, long now) {
         this.needUpdate = false;
@@ -187,25 +191,27 @@ public final class Metadata {
         this.lastSuccessfulRefreshMs = now;
         this.version += 1;
 
-        for (Listener listener: listeners) {
+        for (Listener listener : listeners) {
+            //如果有人监听了metadata的更新，通知他们
             listener.onMetadataUpdate(cluster);
         }
 
         // Do this after notifying listeners as subscribed topics' list can be changed by listeners
         this.cluster = this.needMetadataForAllTopics ? getClusterForCurrentTopics(cluster) : cluster;
-
+        //通知所有的阻塞的producer线程
         notifyAll();
         log.debug("Updated cluster metadata version {} to {}", this.version, this.cluster);
     }
 
     /**
+     * 更新失败，只更新lastRefreshMs
      * Record an attempt to update the metadata that failed. We need to keep track of this
      * to avoid retrying immediately.
      */
     public synchronized void failedUpdate(long now) {
         this.lastRefreshMs = now;
     }
-    
+
     /**
      * @return The current metadata version
      */
@@ -260,7 +266,9 @@ public final class Metadata {
      * MetadataUpdate Listener
      */
     public interface Listener {
+
         void onMetadataUpdate(Cluster cluster);
+
     }
 
     private Cluster getClusterForCurrentTopics(Cluster cluster) {
@@ -278,4 +286,5 @@ public final class Metadata {
         }
         return new Cluster(nodes, partitionInfos, unauthorizedTopics);
     }
+
 }

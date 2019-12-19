@@ -37,12 +37,12 @@ public class AbstractConfig {
     private final Set<String> used;
 
     /**
-     * 用户传入的原始值
+     * 用户自定义传入的原始值
      */
     private final Map<String, ?> originals;
 
     /**
-     * 解析值
+     * 真正使用的值
      */
     private final Map<String, Object> values;
 

@@ -3,9 +3,9 @@
  * file distributed with this work for additional information regarding copyright ownership. The ASF licenses this file
  * to You under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the
  * License. You may obtain a copy of the License at
- * 
+ * <p>
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ * <p>
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
@@ -13,13 +13,27 @@
 package org.apache.kafka.common;
 
 /**
- * Information about a Kafka node
+ * 一个节点相当于一个broker
+ * @author 章云
+ * @date 2019/12/19 14:18
  */
 public class Node {
 
+    /**
+     * broker id
+     */
     private final int id;
+    /**
+     * broker id
+     */
     private final String idString;
+    /**
+     * ip或域名 host.name配置
+     */
     private final String host;
+    /**
+     * 端口，port配置，默认9092
+     */
     private final int port;
 
     public Node(int id, String host, int port) {
@@ -84,7 +98,7 @@ public class Node {
         if (getClass() != obj.getClass()) {
             return false;
         }
-        Node other = (Node) obj;
+        Node other = (Node)obj;
         if (host == null) {
             if (other.host != null) {
                 return false;

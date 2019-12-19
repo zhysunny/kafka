@@ -3,9 +3,9 @@
  * file distributed with this work for additional information regarding copyright ownership. The ASF licenses this file
  * to You under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the
  * License. You may obtain a copy of the License at
- * 
+ * <p>
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ * <p>
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
@@ -13,14 +13,31 @@
 package org.apache.kafka.common;
 
 /**
- * Information about a topic-partition.
+ * 一个分区的详细信息
+ * @author 章云
+ * @date 2019/12/19 14:36
  */
 public class PartitionInfo {
 
+    /**
+     * 分区所属topic
+     */
     private final String topic;
+    /**
+     * 分区索引
+     */
     private final int partition;
+    /**
+     * leader节点
+     */
     private final Node leader;
+    /**
+     * 副本节点
+     */
     private final Node[] replicas;
+    /**
+     * 已同步节点
+     */
     private final Node[] inSyncReplicas;
 
     public PartitionInfo(String topic, int partition, Node leader, Node[] replicas, Node[] inSyncReplicas) {
@@ -70,11 +87,11 @@ public class PartitionInfo {
     @Override
     public String toString() {
         return String.format("Partition(topic = %s, partition = %d, leader = %s, replicas = %s, isr = %s",
-                             topic,
-                             partition,
-                             leader == null ? "none" : leader.id(),
-                             fmtNodeIds(replicas),
-                             fmtNodeIds(inSyncReplicas));
+        topic,
+        partition,
+        leader == null ? "none" : leader.id(),
+        fmtNodeIds(replicas),
+        fmtNodeIds(inSyncReplicas));
     }
 
     /* Extract the node ids from each item in the array and format for display */
@@ -86,7 +103,6 @@ public class PartitionInfo {
         }
         if (nodes.length > 0) {
             b.append(Integer.toString(nodes[nodes.length - 1].id()));
-            b.append(',');
         }
         b.append("]");
         return b.toString();
