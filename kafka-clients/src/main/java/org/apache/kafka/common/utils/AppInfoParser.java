@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -27,6 +27,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class AppInfoParser {
+
     private static final Logger log = LoggerFactory.getLogger(AppInfoParser.class);
     private static String version = "unknown";
     private static String commitId = "unknown";
@@ -34,11 +35,11 @@ public class AppInfoParser {
     static {
         try {
             Properties props = new Properties();
-            props.load(AppInfoParser.class.getResourceAsStream("/kafka/kafka-version.properties"));
+            props.load(AppInfoParser.class.getResourceAsStream("/META-INF/maven/org.apache.kafka/kafka-clients/pom.properties"));
             version = props.getProperty("version", version).trim();
             commitId = props.getProperty("commitId", commitId).trim();
         } catch (Exception e) {
-            log.warn("Error while loading kafka-version.properties :" + e.getMessage());
+            log.warn("Error while loading pom.properties :" + e.getMessage());
         }
     }
 
@@ -73,8 +74,11 @@ public class AppInfoParser {
     }
 
     public interface AppInfoMBean {
+
         public String getVersion();
+
         public String getCommitId();
+
     }
 
     public static class AppInfo implements AppInfoMBean {
@@ -95,4 +99,5 @@ public class AppInfoParser {
         }
 
     }
+
 }

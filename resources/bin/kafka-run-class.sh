@@ -160,6 +160,22 @@ if [ "x$GC_LOG_ENABLED" = "xtrue" ]; then
   KAFKA_GC_LOG_OPTS="-Xloggc:$LOG_DIR/$GC_LOG_FILE_NAME -verbose:gc -XX:+PrintGCDetails -XX:+PrintGCDateStamps -XX:+PrintGCTimeStamps "
 fi
 
+# jmx配置
+if [[ "$1" == "kafka.Kafka" ]]
+then
+    # 开启JMX
+    CONFIG_FILE=$2
+    LOCAL_PATH=`dirname $0`
+    LOCAL_PATH=`cd ${LOCAL_PATH};pwd`
+    PROPERTIES_CONFIG_TOOLS=${LOCAL_PATH}/properties_config_tools.sh
+    HOST_NAME=`sh ${PROPERTIES_CONFIG_TOOLS} get ${CONFIG_FILE} "host.name"`
+    JMXREMOTE_PORT=`sh ${PROPERTIES_CONFIG_TOOLS} get ${CONFIG_FILE} "jmxremote.port"`
+    KAFKA_OPTS="${KAFKA_OPTS} -Djava.rmi.server.hostname=${HOST_NAME}"
+    KAFKA_OPTS="${KAFKA_OPTS} -Dcom.sun.management.jmxremote.port=${JMXREMOTE_PORT}"
+    KAFKA_OPTS="${KAFKA_OPTS} -Dcom.sun.management.jmxremote.ssl=false"
+    KAFKA_OPTS="${KAFKA_OPTS} -Dcom.sun.management.jmxremote.authenticate=false"
+fi
+
 # Launch mode
 if [ "x$DAEMON_MODE" = "xtrue" ]; then
   nohup $JAVA $KAFKA_HEAP_OPTS $KAFKA_JVM_PERFORMANCE_OPTS $KAFKA_GC_LOG_OPTS $KAFKA_JMX_OPTS $KAFKA_LOG4J_OPTS -cp $CLASSPATH $KAFKA_OPTS "$@" > "$CONSOLE_OUTPUT_FILE" 2>&1 < /dev/null &
