@@ -27,11 +27,13 @@ import org.apache.kafka.common.PartitionInfo;
 import org.apache.kafka.common.utils.Utils;
 
 /**
- * The default partitioning strategy:
+ * 默认分区策略
  * <ul>
- * <li>If a partition is specified in the record, use it
- * <li>If no partition is specified but a key is present choose a partition based on a hash of the key
- * <li>If no partition or key is present choose a partition in a round-robin fashion
+ * <li>如果在记录中指定了分区，那么就使用它
+ * <li>如果没有指定分区，但存在一个键，则根据该键的散列选择一个分区
+ * <li>如果没有分区或键，则以循环方式选择分区
+ * @author 章云
+ * @date 2020/1/16 19:14
  */
 public class DefaultPartitioner implements Partitioner {
 
