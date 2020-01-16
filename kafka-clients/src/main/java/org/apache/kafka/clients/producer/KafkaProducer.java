@@ -3,9 +3,9 @@
  * file distributed with this work for additional information regarding copyright ownership. The ASF licenses this file
  * to You under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the
  * License. You may obtain a copy of the License at
- *
+ * <p>
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
@@ -58,7 +58,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * A Kafka client that publishes records to the Kafka cluster.
- * <P>
+ * <p>
  * The producer is <i>thread safe</i> and sharing a single producer instance across threads will generally be faster than
  * having multiple instances.
  * <p>
@@ -149,8 +149,7 @@ public class KafkaProducer<K, V> implements Producer<K, V> {
      * are documented <a href="http://kafka.apache.org/documentation.html#newproducerconfigs">here</a>. Values can be
      * either strings or Objects of the appropriate type (for example a numeric configuration would accept either the
      * string "42" or the integer 42).
-     * @param configs   The producer configs
-     *
+     * @param configs The producer configs
      */
     public KafkaProducer(Map<String, Object> configs) {
         this(new ProducerConfig(configs), null, null);
@@ -161,21 +160,21 @@ public class KafkaProducer<K, V> implements Producer<K, V> {
      * Valid configuration strings are documented <a href="http://kafka.apache.org/documentation.html#newproducerconfigs">here</a>.
      * Values can be either strings or Objects of the appropriate type (for example a numeric configuration would accept
      * either the string "42" or the integer 42).
-     * @param configs   The producer configs
-     * @param keySerializer  The serializer for key that implements {@link Serializer}. The configure() method won't be
-     *                       called in the producer when the serializer is passed in directly.
-     * @param valueSerializer  The serializer for value that implements {@link Serializer}. The configure() method won't
-     *                         be called in the producer when the serializer is passed in directly.
+     * @param configs         The producer configs
+     * @param keySerializer   The serializer for key that implements {@link Serializer}. The configure() method won't be
+     *                        called in the producer when the serializer is passed in directly.
+     * @param valueSerializer The serializer for value that implements {@link Serializer}. The configure() method won't
+     *                        be called in the producer when the serializer is passed in directly.
      */
     public KafkaProducer(Map<String, Object> configs, Serializer<K> keySerializer, Serializer<V> valueSerializer) {
         this(new ProducerConfig(ProducerConfig.addSerializerToConfig(configs, keySerializer, valueSerializer)),
-             keySerializer, valueSerializer);
+        keySerializer, valueSerializer);
     }
 
     /**
      * A producer is instantiated by providing a set of key-value pairs as configuration. Valid configuration strings
      * are documented <a href="http://kafka.apache.org/documentation.html#newproducerconfigs">here</a>.
-     * @param properties   The producer configs
+     * @param properties The producer configs
      */
     public KafkaProducer(Properties properties) {
         this(new ProducerConfig(properties), null, null);
@@ -184,81 +183,95 @@ public class KafkaProducer<K, V> implements Producer<K, V> {
     /**
      * A producer is instantiated by providing a set of key-value pairs as configuration, a key and a value {@link Serializer}.
      * Valid configuration strings are documented <a href="http://kafka.apache.org/documentation.html#newproducerconfigs">here</a>.
-     * @param properties   The producer configs
-     * @param keySerializer  The serializer for key that implements {@link Serializer}. The configure() method won't be
-     *                       called in the producer when the serializer is passed in directly.
-     * @param valueSerializer  The serializer for value that implements {@link Serializer}. The configure() method won't
-     *                         be called in the producer when the serializer is passed in directly.
+     * @param properties      The producer configs
+     * @param keySerializer   The serializer for key that implements {@link Serializer}. The configure() method won't be
+     *                        called in the producer when the serializer is passed in directly.
+     * @param valueSerializer The serializer for value that implements {@link Serializer}. The configure() method won't
+     *                        be called in the producer when the serializer is passed in directly.
      */
     public KafkaProducer(Properties properties, Serializer<K> keySerializer, Serializer<V> valueSerializer) {
         this(new ProducerConfig(ProducerConfig.addSerializerToConfig(properties, keySerializer, valueSerializer)),
-             keySerializer, valueSerializer);
+        keySerializer, valueSerializer);
     }
 
     @SuppressWarnings("unchecked")
     private KafkaProducer(ProducerConfig config, Serializer<K> keySerializer, Serializer<V> valueSerializer) {
         try {
             log.trace("Starting the Kafka producer");
+            // 用户自定义的配置，拷贝一份
             Map<String, Object> userProvidedConfigs = config.originals();
             this.producerConfig = config;
             this.time = new SystemTime();
 
-            MetricConfig metricConfig = new MetricConfig().samples(config.getInt(ProducerConfig.METRICS_NUM_SAMPLES_CONFIG))
-                    .timeWindow(config.getLong(ProducerConfig.METRICS_SAMPLE_WINDOW_MS_CONFIG),
-                            TimeUnit.MILLISECONDS);
+            MetricConfig metricConfig = new MetricConfig()
+            // metrics.num.samples  default=2
+            .samples(config.getInt(ProducerConfig.METRICS_NUM_SAMPLES_CONFIG))
+            // metrics.sample.window.ms  default=30000
+            .timeWindow(config.getLong(ProducerConfig.METRICS_SAMPLE_WINDOW_MS_CONFIG), TimeUnit.MILLISECONDS);
+            // client.id  default=""
             clientId = config.getString(ProducerConfig.CLIENT_ID_CONFIG);
             if (clientId.length() <= 0) {
                 clientId = "producer-" + PRODUCER_CLIENT_ID_SEQUENCE.getAndIncrement();
             }
-            List<MetricsReporter> reporters = config.getConfiguredInstances(ProducerConfig.METRIC_REPORTER_CLASSES_CONFIG,
-                    MetricsReporter.class);
+            // metric.reporters  default=""
+            List<MetricsReporter> reporters = config
+            .getConfiguredInstances(ProducerConfig.METRIC_REPORTER_CLASSES_CONFIG, MetricsReporter.class);
+            // 默认添加JmxReporter
             reporters.add(new JmxReporter(JMX_PREFIX));
+            // 度量
             this.metrics = new Metrics(metricConfig, reporters, time);
+            // partitioner.class  default=DefaultPartitioner
             this.partitioner = config.getConfiguredInstance(ProducerConfig.PARTITIONER_CLASS_CONFIG, Partitioner.class);
+            // retry.backoff.ms  default=100
             long retryBackoffMs = config.getLong(ProducerConfig.RETRY_BACKOFF_MS_CONFIG);
+            // metadata.max.age.ms  default=5*60*1000
             this.metadata = new Metadata(retryBackoffMs, config.getLong(ProducerConfig.METADATA_MAX_AGE_CONFIG));
+            // max.request.size  default=1*1024*1024
             this.maxRequestSize = config.getInt(ProducerConfig.MAX_REQUEST_SIZE_CONFIG);
+            // buffer.memory  default=32*1024*1024
             this.totalMemorySize = config.getLong(ProducerConfig.BUFFER_MEMORY_CONFIG);
+            // compression.type  default="none"
             this.compressionType = CompressionType.forName(config.getString(ProducerConfig.COMPRESSION_TYPE_CONFIG));
-            /* check for user defined settings.
-             * If the BLOCK_ON_BUFFER_FULL is set to true,we do not honor METADATA_FETCH_TIMEOUT_CONFIG.
-             * This should be removed with release 0.9 when the deprecated configs are removed.
-             */
+
+            // block.on.buffer.full和metadata.fetch.timeout.ms已过时
+            // 使用max.block.ms
             if (userProvidedConfigs.containsKey(ProducerConfig.BLOCK_ON_BUFFER_FULL_CONFIG)) {
                 // block.on.buffer.full  default=false  必须自定义，否则不存在
                 log.warn(ProducerConfig.BLOCK_ON_BUFFER_FULL_CONFIG + " config is deprecated and will be removed soon. " +
-                        "Please use " + ProducerConfig.MAX_BLOCK_MS_CONFIG);
+                "Please use " + ProducerConfig.MAX_BLOCK_MS_CONFIG);
                 boolean blockOnBufferFull = config.getBoolean(ProducerConfig.BLOCK_ON_BUFFER_FULL_CONFIG);
                 if (blockOnBufferFull) {
+                    // 当设置block.on.buffer.full=true
                     this.maxBlockTimeMs = Long.MAX_VALUE;
                 } else if (userProvidedConfigs.containsKey(ProducerConfig.METADATA_FETCH_TIMEOUT_CONFIG)) {
                     // metadata.fetch.timeout.ms  default=60000  必须自定义，否则不存在
                     log.warn(ProducerConfig.METADATA_FETCH_TIMEOUT_CONFIG + " config is deprecated and will be removed soon. " +
-                            "Please use " + ProducerConfig.MAX_BLOCK_MS_CONFIG);
+                    "Please use " + ProducerConfig.MAX_BLOCK_MS_CONFIG);
                     this.maxBlockTimeMs = config.getLong(ProducerConfig.METADATA_FETCH_TIMEOUT_CONFIG);
                 } else {
+                    // max.block.ms  default=60000
                     this.maxBlockTimeMs = config.getLong(ProducerConfig.MAX_BLOCK_MS_CONFIG);
                 }
             } else if (userProvidedConfigs.containsKey(ProducerConfig.METADATA_FETCH_TIMEOUT_CONFIG)) {
                 // metadata.fetch.timeout.ms  default=60000  必须自定义，否则不存在
                 log.warn(ProducerConfig.METADATA_FETCH_TIMEOUT_CONFIG + " config is deprecated and will be removed soon. " +
-                        "Please use " + ProducerConfig.MAX_BLOCK_MS_CONFIG);
+                "Please use " + ProducerConfig.MAX_BLOCK_MS_CONFIG);
                 this.maxBlockTimeMs = config.getLong(ProducerConfig.METADATA_FETCH_TIMEOUT_CONFIG);
             } else {
+                // 默认走这个分支
                 // max.block.ms  default=60000
                 this.maxBlockTimeMs = config.getLong(ProducerConfig.MAX_BLOCK_MS_CONFIG);
             }
 
-            /* check for user defined settings.
-             * If the TIME_OUT config is set use that for request timeout.
-             * This should be removed with release 0.9
-             */
+            // timeout.ms已过时
+            // 使用request.timeout.ms
             if (userProvidedConfigs.containsKey(ProducerConfig.TIMEOUT_CONFIG)) {
                 // timeout.ms  default=30000  必须自定义，否则不存在
                 log.warn(ProducerConfig.TIMEOUT_CONFIG + " config is deprecated and will be removed soon. Please use " +
-                        ProducerConfig.REQUEST_TIMEOUT_MS_CONFIG);
+                ProducerConfig.REQUEST_TIMEOUT_MS_CONFIG);
                 this.requestTimeoutMs = config.getInt(ProducerConfig.TIMEOUT_CONFIG);
             } else {
+                // 默认走这个分支
                 // request.timeout.ms  default=30000
                 this.requestTimeoutMs = config.getInt(ProducerConfig.REQUEST_TIMEOUT_MS_CONFIG);
             }
@@ -267,61 +280,75 @@ public class KafkaProducer<K, V> implements Producer<K, V> {
             metricTags.put("client-id", clientId);
             // batch.size  default=16348
             this.accumulator = new RecordAccumulator(config.getInt(ProducerConfig.BATCH_SIZE_CONFIG),
-                    this.totalMemorySize,
-                    this.compressionType,
-                    config.getLong(ProducerConfig.LINGER_MS_CONFIG),
-                    retryBackoffMs,
-                    metrics,
-                    time,
-                    metricTags);
+            // 默认32M
+            this.totalMemorySize,
+            // 默认none
+            this.compressionType,
+            // linger.ms  default=0
+            config.getLong(ProducerConfig.LINGER_MS_CONFIG),
+            // 默认100
+            retryBackoffMs,
+            metrics,
+            time,
+            metricTags);
+            List<InetSocketAddress> addresses = ClientUtils.parseAndValidateAddresses(
             // bootstrap.servers
-            List<InetSocketAddress> addresses = ClientUtils.parseAndValidateAddresses(config.getList(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG));
+            config.getList(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG));
             this.metadata.update(Cluster.bootstrap(addresses), time.milliseconds());
             ChannelBuilder channelBuilder = ClientUtils.createChannelBuilder(config.values());
             NetworkClient client = new NetworkClient(
-                    new Selector(config.getLong(ProducerConfig.CONNECTIONS_MAX_IDLE_MS_CONFIG), this.metrics, time, "producer", metricTags, channelBuilder),
-                    this.metadata,
-                    clientId,
-                    config.getInt(ProducerConfig.MAX_IN_FLIGHT_REQUESTS_PER_CONNECTION),
-                    config.getLong(ProducerConfig.RECONNECT_BACKOFF_MS_CONFIG),
-                    config.getInt(ProducerConfig.SEND_BUFFER_CONFIG),
-                    config.getInt(ProducerConfig.RECEIVE_BUFFER_CONFIG),
-                    this.requestTimeoutMs, time);
+            // connections.max.idle.ms  default=9*60*1000
+            new Selector(config.getLong(ProducerConfig.CONNECTIONS_MAX_IDLE_MS_CONFIG), this.metrics, time, "producer", metricTags,
+            channelBuilder),
+            this.metadata,
+            clientId,
+            // max.in.flight.requests.per.connection  default=5
+            config.getInt(ProducerConfig.MAX_IN_FLIGHT_REQUESTS_PER_CONNECTION),
+            // reconnect.backoff.ms  default=50
+            config.getLong(ProducerConfig.RECONNECT_BACKOFF_MS_CONFIG),
+            // send.buffer.bytes  default=128*1024
+            config.getInt(ProducerConfig.SEND_BUFFER_CONFIG),
+            // receive.buffer.bytes  default=32*1024
+            config.getInt(ProducerConfig.RECEIVE_BUFFER_CONFIG),
+            this.requestTimeoutMs, time);
             //构造一个sender。sender本身实现的是Runnable接口
             this.sender = new Sender(client,
-                    this.metadata,
-                    this.accumulator,
-                    config.getInt(ProducerConfig.MAX_REQUEST_SIZE_CONFIG),
-                    (short) parseAcks(config.getString(ProducerConfig.ACKS_CONFIG)),
-                    config.getInt(ProducerConfig.RETRIES_CONFIG),
-                    this.metrics,
-                    new SystemTime(),
-                    clientId,
-                    this.requestTimeoutMs);
+            this.metadata,
+            this.accumulator,
+            // max.request.size  default=1*1024*1024
+            config.getInt(ProducerConfig.MAX_REQUEST_SIZE_CONFIG),
+            // acks  default=1
+            parseAcks(config.getString(ProducerConfig.ACKS_CONFIG)),
+            // retries  default=0
+            config.getInt(ProducerConfig.RETRIES_CONFIG),
+            this.metrics,
+            new SystemTime(),
+            clientId,
+            this.requestTimeoutMs);
+
+            //一个线程，开启sender
             String ioThreadName = "kafka-producer-network-thread" + (clientId.length() > 0 ? " | " + clientId : "");
             this.ioThread = new KafkaThread(ioThreadName, this.sender, true);
-            //一个线程，开启sender
             this.ioThread.start();
 
             this.errors = this.metrics.sensor("errors");
 
             if (keySerializer == null) {
-                this.keySerializer = config.getConfiguredInstance(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG,
-                        Serializer.class);
+                this.keySerializer = config.getConfiguredInstance(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, Serializer.class);
                 this.keySerializer.configure(config.originals(), true);
             } else {
                 config.ignore(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG);
                 this.keySerializer = keySerializer;
             }
             if (valueSerializer == null) {
-                this.valueSerializer = config.getConfiguredInstance(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG,
-                        Serializer.class);
+                this.valueSerializer = config.getConfiguredInstance(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, Serializer.class);
                 this.valueSerializer.configure(config.originals(), false);
             } else {
                 config.ignore(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG);
                 this.valueSerializer = valueSerializer;
             }
             config.logUnused();
+            // 版本信息的MBean
             AppInfoParser.registerAppInfo(JMX_PREFIX, clientId);
             log.debug("Kafka producer started");
         } catch (Throwable t) {
@@ -333,11 +360,11 @@ public class KafkaProducer<K, V> implements Producer<K, V> {
         }
     }
 
-    private static int parseAcks(String acksString) {
+    private static short parseAcks(String acks) {
         try {
-            return "all".equals(acksString.trim().toLowerCase()) ? -1 : Integer.parseInt(acksString.trim());
+            return "all".equals(acks.trim().toLowerCase()) ? (short)-1 : Short.parseShort(acks.trim());
         } catch (NumberFormatException e) {
-            throw new ConfigException("Invalid configuration value for 'acks': " + acksString);
+            throw new ConfigException("Invalid configuration value for 'acks': " + acks);
         }
     }
 
@@ -391,7 +418,7 @@ public class KafkaProducer<K, V> implements Producer<K, V> {
      *               });
      * }
      * </pre>
-     *
+     * <p>
      * Callbacks for records being sent to the same partition are guaranteed to execute in order. That is, in the
      * following example <code>callback1</code> is guaranteed to execute before <code>callback2</code>:
      *
@@ -406,44 +433,48 @@ public class KafkaProducer<K, V> implements Producer<K, V> {
      * they will delay the sending of messages from other threads. If you want to execute blocking or computationally
      * expensive callbacks it is recommended to use your own {@link java.util.concurrent.Executor} in the callback body
      * to parallelize processing.
-     *
-     * @param record The record to send
+     * @param record   The record to send
      * @param callback A user-supplied callback to execute when the record has been acknowledged by the server (null
-     *        indicates no callback)
-     *
-     * @throws InterruptException If the thread is interrupted while blocked
-     * @throws SerializationException If the key or value are not valid objects given the configured serializers
+     *                 indicates no callback)
+     * @throws InterruptException       If the thread is interrupted while blocked
+     * @throws SerializationException   If the key or value are not valid objects given the configured serializers
      * @throws BufferExhaustedException If <code>block.on.buffer.full=false</code> and the buffer is full.
-     *
      */
     @Override
     public Future<RecordMetadata> send(ProducerRecord<K, V> record, Callback callback) {
         try {
-            // first make sure the metadata for the topic is available
+            // 首先，确保主题的元数据可用
             long waitedOnMetadataMs = waitOnMetadata(record.topic(), this.maxBlockTimeMs);
             long remainingWaitMs = Math.max(0, this.maxBlockTimeMs - waitedOnMetadataMs);
+            // 序列化
             byte[] serializedKey;
             try {
                 serializedKey = keySerializer.serialize(record.topic(), record.key());
             } catch (ClassCastException cce) {
                 throw new SerializationException("Can't convert key of class " + record.key().getClass().getName() +
-                        " to class " + producerConfig.getClass(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG).getName() +
-                        " specified in key.serializer");
+                " to class " + producerConfig.getClass(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG).getName() +
+                " specified in key.serializer");
             }
             byte[] serializedValue;
             try {
                 serializedValue = valueSerializer.serialize(record.topic(), record.value());
             } catch (ClassCastException cce) {
                 throw new SerializationException("Can't convert value of class " + record.value().getClass().getName() +
-                        " to class " + producerConfig.getClass(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG).getName() +
-                        " specified in value.serializer");
+                " to class " + producerConfig.getClass(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG).getName() +
+                " specified in value.serializer");
             }
-            int partition = partition(record, serializedKey, serializedValue, metadata.fetch());
+            int partition = partition(record, serializedKey, metadata.fetch());
+            // Records.LOG_OVERHEAD = 4+8  Record.recordSize(serializedKey, serializedValue) = 4+1+1+4+4+key.length+value.length
+            // serializedSize = 26+key.length+value.length
             int serializedSize = Records.LOG_OVERHEAD + Record.recordSize(serializedKey, serializedValue);
+            // 校验消息是否太大
             ensureValidRecordSize(serializedSize);
+            // 封装消息
             TopicPartition tp = new TopicPartition(record.topic(), partition);
             log.trace("Sending record {} with callback {} to topic {} partition {}", record, callback, record.topic(), partition);
+            // 将消息添加到队列
             RecordAccumulator.RecordAppendResult result = accumulator.append(tp, serializedKey, serializedValue, callback, remainingWaitMs);
+            // 当队列满，唤醒sender线程发送数据
             if (result.batchIsFull || result.newBatchCreated) {
                 log.trace("Waking up the sender since topic {} partition {} is either full or getting a new batch", record.topic(), partition);
                 this.sender.wakeup();
@@ -473,13 +504,13 @@ public class KafkaProducer<K, V> implements Producer<K, V> {
     }
 
     /**
-     * Wait for cluster metadata including partitions for the given topic to be available.
-     * @param topic The topic we want metadata for
+     * 等待集群元数据(包括给定主题的分区)可用。
+     * @param topic     The topic we want metadata for
      * @param maxWaitMs The maximum time in ms for waiting on the metadata
      * @return The amount of time we waited in ms
      */
     private long waitOnMetadata(String topic, long maxWaitMs) throws InterruptedException {
-        // add topic to metadata topic list if it is not there already.
+        // 如果元数据主题列表中还没有主题，则将其添加到元数据主题列表中。
         if (!this.metadata.containsTopic(topic)) {
             this.metadata.add(topic);
         }
@@ -513,20 +544,20 @@ public class KafkaProducer<K, V> implements Producer<K, V> {
     }
 
     /**
-     * Validate that the record size isn't too large
+     * 确认记录大小不是太大
      */
     private void ensureValidRecordSize(int size) {
         if (size > this.maxRequestSize) {
             throw new RecordTooLargeException("The message is " + size +
-                                              " bytes when serialized which is larger than the maximum request size you have configured with the " +
-                                              ProducerConfig.MAX_REQUEST_SIZE_CONFIG +
-                                              " configuration.");
+            " bytes when serialized which is larger than the maximum request size you have configured with the " +
+            ProducerConfig.MAX_REQUEST_SIZE_CONFIG +
+            " configuration.");
         }
         if (size > this.totalMemorySize) {
             throw new RecordTooLargeException("The message is " + size +
-                                              " bytes when serialized which is larger than the total memory buffer you have configured with the " +
-                                              ProducerConfig.BUFFER_MEMORY_CONFIG +
-                                              " configuration.");
+            " bytes when serialized which is larger than the total memory buffer you have configured with the " +
+            ProducerConfig.BUFFER_MEMORY_CONFIG +
+            " configuration.");
         }
     }
 
@@ -552,10 +583,9 @@ public class KafkaProducer<K, V> implements Producer<K, V> {
      * consumer.commit();
      * }
      * </pre>
-     *
+     * <p>
      * Note that the above example may drop records if the produce request fails. If we want to ensure that this does not occur
      * we need to set <code>retries=&lt;large_number&gt;</code> in our config.
-     *
      * @throws InterruptException If the thread is interrupted while blocked
      */
     @Override
@@ -600,7 +630,6 @@ public class KafkaProducer<K, V> implements Producer<K, V> {
      * will be called instead. We do this because the sender thread would otherwise try to join itself and
      * block forever.</strong>
      * <p>
-     *
      * @throws InterruptException If the thread is interrupted while blocked
      */
     @Override
@@ -617,11 +646,10 @@ public class KafkaProducer<K, V> implements Producer<K, V> {
      * If invoked from within a {@link Callback} this method will not block and will be equivalent to
      * <code>close(0, TimeUnit.MILLISECONDS)</code>. This is done since no further sending will happen while
      * blocking the I/O thread of the producer.
-     *
-     * @param timeout The maximum time to wait for producer to complete any pending requests. The value should be
-     *                non-negative. Specifying a timeout of zero means do not wait for pending send requests to complete.
+     * @param timeout  The maximum time to wait for producer to complete any pending requests. The value should be
+     *                 non-negative. Specifying a timeout of zero means do not wait for pending send requests to complete.
      * @param timeUnit The time unit for the <code>timeout</code>
-     * @throws InterruptException If the thread is interrupted while blocked
+     * @throws InterruptException       If the thread is interrupted while blocked
      * @throws IllegalArgumentException If the <code>timeout</code> is negative.
      */
     @Override
@@ -641,7 +669,7 @@ public class KafkaProducer<K, V> implements Producer<K, V> {
         if (timeout > 0) {
             if (invokedFromCallback) {
                 log.warn("Overriding close timeout {} ms to 0 ms in order to prevent useless blocking due to self-join. " +
-                    "This means you have incorrectly invoked close with a non-zero timeout from the producer call-back.", timeout);
+                "This means you have incorrectly invoked close with a non-zero timeout from the producer call-back.", timeout);
             } else {
                 // Try to close gracefully.
                 if (this.sender != null) {
@@ -660,7 +688,7 @@ public class KafkaProducer<K, V> implements Producer<K, V> {
 
         if (this.sender != null && this.ioThread != null && this.ioThread.isAlive()) {
             log.info("Proceeding to force close the producer since pending requests could not be completed " +
-                "within timeout {} ms.", timeout);
+            "within timeout {} ms.", timeout);
             this.sender.forceClose();
             // Only join the sender thread when not calling from callback.
             if (!invokedFromCallback) {
@@ -683,11 +711,10 @@ public class KafkaProducer<K, V> implements Producer<K, V> {
     }
 
     /**
-     * computes partition for given record.
-     * if the record has partition returns the value otherwise
-     * calls configured partitioner class to compute the partition.
+     * 计算给定记录的分区。
+     * 如果记录有分区，则返回值，否则调用已配置的分区程序类来计算分区。
      */
-    private int partition(ProducerRecord<K, V> record, byte[] serializedKey, byte[] serializedValue, Cluster cluster) {
+    private int partition(ProducerRecord<K, V> record, byte[] serializedKey, Cluster cluster) {
         Integer partition = record.partition();
         if (partition != null) {
             List<PartitionInfo> partitions = cluster.partitionsForTopic(record.topic());
@@ -695,14 +722,13 @@ public class KafkaProducer<K, V> implements Producer<K, V> {
             // they have given us a partition, use it
             if (partition < 0 || partition >= numPartitions) {
                 throw new IllegalArgumentException("Invalid partition given with record: " + partition
-                                                   + " is not in the range [0..."
-                                                   + numPartitions
-                                                   + "].");
+                + " is not in the range [0..."
+                + numPartitions
+                + "].");
             }
             return partition;
         }
-        return this.partitioner.partition(record.topic(), record.key(), serializedKey, record.value(), serializedValue,
-            cluster);
+        return this.partitioner.partition(record.topic(), serializedKey, cluster);
     }
 
     private static class FutureFailure implements Future<RecordMetadata> {

@@ -327,7 +327,9 @@ public class Metrics implements Closeable {
         }
     }
 
-    /* For testing use only. */
+    /**
+     * For testing use only.
+     * */
     Map<Sensor, List<Sensor>> childrenSensors() {
         return Collections.unmodifiableMap(childrenSensors);
     }
