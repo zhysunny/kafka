@@ -3,17 +3,14 @@
  * file distributed with this work for additional information regarding copyright ownership. The ASF licenses this file
  * to You under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the
  * License. You may obtain a copy of the License at
- * 
+ * <p>
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ * <p>
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
 package org.apache.kafka.clients.producer.internals;
-
-import java.util.ArrayList;
-import java.util.List;
 
 import org.apache.kafka.clients.producer.Callback;
 import org.apache.kafka.clients.producer.RecordMetadata;
@@ -23,11 +20,14 @@ import org.apache.kafka.common.record.MemoryRecords;
 import org.apache.kafka.common.record.Record;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
- * A batch of records that is or will be sent.
- * 
- * This class is not thread safe and external synchronization must be used when modifying it
+ * 正在或将要发送的一批记录。
+ * 这个类不是线程安全的，修改它时必须使用外部同步
+ * @author 章云
+ * @date 2020/1/17 9:45
  */
 public final class RecordBatch {
 
@@ -59,7 +59,7 @@ public final class RecordBatch {
 
     /**
      * Append the record to the current record set and return the relative offset within that record set
-     * 
+     *
      * @return The RecordSend corresponding to this record or null if there isn't sufficient room.
      */
     public FutureRecordMetadata tryAppend(byte[] key, byte[] value, Callback callback, long now) {
@@ -80,21 +80,21 @@ public final class RecordBatch {
 
     /**
      * Complete the request
-     * 
+     *
      * @param baseOffset The base offset of the messages assigned by the server
      * @param exception The exception that occurred (or null if the request was successful)
      */
     public void done(long baseOffset, RuntimeException exception) {
         log.trace("Produced messages to topic-partition {} with base offset offset {} and error: {}.",
-                  topicPartition,
-                  baseOffset,
-                  exception);
+        topicPartition,
+        baseOffset,
+        exception);
         // execute callbacks
         for (int i = 0; i < this.thunks.size(); i++) {
             try {
                 Thunk thunk = this.thunks.get(i);
                 if (exception == null) {
-                    RecordMetadata metadata = new RecordMetadata(this.topicPartition,  baseOffset, thunk.future.relativeOffset());
+                    RecordMetadata metadata = new RecordMetadata(this.topicPartition, baseOffset, thunk.future.relativeOffset());
                     thunk.callback.onCompletion(metadata, null);
                 } else {
                     thunk.callback.onCompletion(null, exception);
@@ -110,6 +110,7 @@ public final class RecordBatch {
      * A callback and the associated FutureRecordMetadata argument to pass to it.
      */
     final private static class Thunk {
+
         final Callback callback;
         final FutureRecordMetadata future;
 
@@ -117,6 +118,7 @@ public final class RecordBatch {
             this.callback = callback;
             this.future = future;
         }
+
     }
 
     @Override
@@ -131,7 +133,8 @@ public final class RecordBatch {
      */
     public boolean maybeExpire(int requestTimeout, long now, long lingerMs) {
         boolean expire = false;
-        if ((this.records.isFull() && requestTimeout < (now - this.lastAppendTime)) || requestTimeout < (now - (this.lastAttemptMs + lingerMs))) {
+        if ((this.records.isFull() && requestTimeout < (now - this.lastAppendTime)) || requestTimeout < (now - (this.lastAttemptMs
+        + lingerMs))) {
             expire = true;
             this.records.close();
             this.done(-1L, new TimeoutException("Batch Expired"));
@@ -153,4 +156,5 @@ public final class RecordBatch {
     public void setRetry() {
         this.retry = true;
     }
+
 }

@@ -315,8 +315,7 @@ public class KafkaProducer<K, V> implements Producer<K, V> {
             this.sender = new Sender(client,
             this.metadata,
             this.accumulator,
-            // max.request.size  default=1*1024*1024
-            config.getInt(ProducerConfig.MAX_REQUEST_SIZE_CONFIG),
+            this.maxRequestSize,
             // acks  default=1
             parseAcks(config.getString(ProducerConfig.ACKS_CONFIG)),
             // retries  default=0
@@ -476,7 +475,8 @@ public class KafkaProducer<K, V> implements Producer<K, V> {
             RecordAccumulator.RecordAppendResult result = accumulator.append(tp, serializedKey, serializedValue, callback, remainingWaitMs);
             // 当队列满，唤醒sender线程发送数据
             if (result.batchIsFull || result.newBatchCreated) {
-                log.trace("Waking up the sender since topic {} partition {} is either full or getting a new batch", record.topic(), partition);
+                log
+                .trace("Waking up the sender since topic {} partition {} is either full or getting a new batch", record.topic(), partition);
                 this.sender.wakeup();
             }
             return result.future;

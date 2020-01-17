@@ -34,7 +34,16 @@ public class DefaultPartitionerTest {
      */
     @Test
     public void testPartition() throws Exception {
-        //TODO: Test goes here...
+        System.out.println(0x7fffffff);
+        double total = 0.0;
+        for (int i = 0; i < 7; i++) {
+            total += 15 * Math.pow(16, i);
+        }
+        total += 7 * Math.pow(16, 7);
+        System.out.println((int)total);
+        System.out.println(Integer.MAX_VALUE);
+        System.out.println(Integer.toBinaryString(Integer.MAX_VALUE));
+        System.out.println(Integer.toBinaryString(Integer.MAX_VALUE).length());
     }
 
     /**

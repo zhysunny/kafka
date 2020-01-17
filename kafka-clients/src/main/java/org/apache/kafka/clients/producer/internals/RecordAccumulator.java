@@ -158,14 +158,14 @@ public final class RecordAccumulator {
      * @param maxTimeToBlock The maximum time in milliseconds to block for buffer memory to be available
      */
     public RecordAppendResult append(TopicPartition tp, byte[] key, byte[] value, Callback callback, long maxTimeToBlock) throws InterruptedException {
-        // We keep track of the number of appending thread to make sure we do not miss batches in
-        // abortIncompleteBatches().
+        // 我们跟踪附加线程的数量，以确保我们没有遗漏批次 abortIncompleteBatches().
         appendsInProgress.incrementAndGet();
         try {
             if (closed) {
                 throw new IllegalStateException("Cannot send after the producer is closed.");
             }
             // check if we have an in-progress batch
+            // 一个分区一个队列
             Deque<RecordBatch> dq = dequeFor(tp);
             synchronized (dq) {
                 RecordBatch last = dq.peekLast();
@@ -177,7 +177,7 @@ public final class RecordAccumulator {
                 }
             }
 
-            // we don't have an in-progress record batch try to allocate a new batch
+            // 我们没有一个正在进行的记录批尝试分配一个新的批
             int size = Math.max(this.batchSize, Records.LOG_OVERHEAD + Record.recordSize(key, value));
             log.trace("Allocating a new {} byte message buffer for topic {} partition {}", size, tp.topic(), tp.partition());
             ByteBuffer buffer = free.allocate(size, maxTimeToBlock);

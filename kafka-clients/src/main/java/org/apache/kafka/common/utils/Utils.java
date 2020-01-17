@@ -314,9 +314,9 @@ public class Utils {
     }
 
     /**
-     * Generates 32 bit murmur2 hash from byte array
+     * 从字节数组生成32位murmur2散列
      * @param data byte array to hash
-     * @return 32 bit hash of the given array
+     * @return 给定数组的32位哈希
      */
     public static int murmur2(final byte[] data) {
         int length = data.length;
