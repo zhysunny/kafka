@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,14 +16,14 @@
  */
 package org.apache.kafka.common.record;
 
-import java.nio.ByteBuffer;
-
 import org.apache.kafka.common.utils.Crc32;
 import org.apache.kafka.common.utils.Utils;
-
+import java.nio.ByteBuffer;
 
 /**
- * A record: a serialized key and value along with the associated CRC and other fields
+ * 记录:一个序列化的键和值，以及相关的CRC和其他字段
+ * @author 章云
+ * @date 2020/1/22 16:36
  */
 public final class Record {
 
@@ -32,24 +32,24 @@ public final class Record {
      */
     public static final int CRC_OFFSET = 0;
     public static final int CRC_LENGTH = 4;
-    public static final int MAGIC_OFFSET = CRC_OFFSET + CRC_LENGTH;
+    public static final int MAGIC_OFFSET = CRC_OFFSET + CRC_LENGTH;//4
     public static final int MAGIC_LENGTH = 1;
-    public static final int ATTRIBUTES_OFFSET = MAGIC_OFFSET + MAGIC_LENGTH;
+    public static final int ATTRIBUTES_OFFSET = MAGIC_OFFSET + MAGIC_LENGTH;//5
     public static final int ATTRIBUTE_LENGTH = 1;
-    public static final int KEY_SIZE_OFFSET = ATTRIBUTES_OFFSET + ATTRIBUTE_LENGTH;
+    public static final int KEY_SIZE_OFFSET = ATTRIBUTES_OFFSET + ATTRIBUTE_LENGTH;//6
     public static final int KEY_SIZE_LENGTH = 4;
-    public static final int KEY_OFFSET = KEY_SIZE_OFFSET + KEY_SIZE_LENGTH;
+    public static final int KEY_OFFSET = KEY_SIZE_OFFSET + KEY_SIZE_LENGTH;//10
     public static final int VALUE_SIZE_LENGTH = 4;
 
     /**
      * The size for the record header
      */
-    public static final int HEADER_SIZE = CRC_LENGTH + MAGIC_LENGTH + ATTRIBUTE_LENGTH;
+    public static final int HEADER_SIZE = CRC_LENGTH + MAGIC_LENGTH + ATTRIBUTE_LENGTH;//6
 
     /**
      * The amount of overhead bytes in a record
      */
-    public static final int RECORD_OVERHEAD = HEADER_SIZE + KEY_SIZE_LENGTH + VALUE_SIZE_LENGTH;
+    public static final int RECORD_OVERHEAD = HEADER_SIZE + KEY_SIZE_LENGTH + VALUE_SIZE_LENGTH;//14
 
     /**
      * The current "magic" value
@@ -60,7 +60,7 @@ public final class Record {
      * Specifies the mask for the compression code. 3 bits to hold the compression codec. 0 is reserved to indicate no
      * compression
      */
-    public static final int COMPRESSION_CODEC_MASK = 0x07;
+    public static final int COMPRESSION_CODEC_MASK = 0x07;//7
 
     /**
      * Compression code for uncompressed records
@@ -74,19 +74,18 @@ public final class Record {
     }
 
     /**
-     * A constructor to create a LogRecord. If the record's compression type is not none, then
-     * its value payload should be already compressed with the specified type; the constructor
-     * would always write the value payload as is and will not do the compression itself.
-     * 
-     * @param key The key of the record (null, if none)
-     * @param value The record value
-     * @param type The compression type used on the contents of the record (if any)
+     * 创建日志记录的构造函数。
+     * 如果记录的压缩类型不是none，那么它的值负载应该已经用指定的类型压缩过了;
+     * 构造函数将始终按原样写入值payload，而不会执行压缩本身。
+     * @param key         The key of the record (null, if none)
+     * @param value       The record value
+     * @param type        The compression type used on the contents of the record (if any)
      * @param valueOffset The offset into the payload array used to extract payload
-     * @param valueSize The size of the payload to use
+     * @param valueSize   The size of the payload to use
      */
     public Record(byte[] key, byte[] value, CompressionType type, int valueOffset, int valueSize) {
-        this(ByteBuffer.allocate(recordSize(key == null ? 0 : key.length,
-            value == null ? 0 : valueSize >= 0 ? valueSize : value.length - valueOffset)));
+        this(ByteBuffer
+        .allocate(recordSize(key == null ? 0 : key.length, value == null ? 0 : valueSize >= 0 ? valueSize : value.length - valueOffset)));
         write(this.buffer, key, value, type, valueOffset, valueSize);
         this.buffer.rewind();
     }
@@ -107,18 +106,25 @@ public final class Record {
         this(null, value, CompressionType.NONE);
     }
 
-    // Write a record to the buffer, if the record's compression type is none, then
-    // its value payload should be already compressed with the specified type
+    /**
+     * 向缓冲区写入一条记录，如果记录的压缩类型为none，则其值有效负载应该已经使用指定的类型进行了压缩
+     * @param buffer
+     * @param key
+     * @param value
+     * @param type
+     * @param valueOffset
+     * @param valueSize
+     */
     public static void write(ByteBuffer buffer, byte[] key, byte[] value, CompressionType type, int valueOffset, int valueSize) {
-        // construct the compressor with compression type none since this function will not do any
-        //compression according to the input type, it will just write the record's payload as is
+        // 构造压缩类型为none的压缩机，因为该函数不执行任何操作
+        // 根据输入类型进行压缩，它将仅按原样写入记录的有效负载
         Compressor compressor = new Compressor(buffer, CompressionType.NONE, buffer.capacity());
         compressor.putRecord(key, value, type, valueOffset, valueSize);
     }
 
     public static void write(Compressor compressor, long crc, byte attributes, byte[] key, byte[] value, int valueOffset, int valueSize) {
         // write crc
-        compressor.putInt((int) (crc & 0xffffffffL));
+        compressor.putInt((int)(crc & 0xffffffffL));
         // write magic value
         compressor.putByte(CURRENT_MAGIC_VALUE);
         // write attributes
@@ -145,7 +151,7 @@ public final class Record {
     }
 
     public static int recordSize(int keySize, int valueSize) {
-        return CRC_LENGTH + MAGIC_LENGTH + ATTRIBUTE_LENGTH + KEY_SIZE_LENGTH + keySize + VALUE_SIZE_LENGTH + valueSize;
+        return RECORD_OVERHEAD + keySize + valueSize;
     }
 
     public ByteBuffer buffer() {
@@ -155,7 +161,7 @@ public final class Record {
     public static byte computeAttributes(CompressionType type) {
         byte attributes = 0;
         if (type.id > 0) {
-            attributes = (byte) (attributes | (COMPRESSION_CODEC_MASK & type.id));
+            attributes = (byte)(attributes | (COMPRESSION_CODEC_MASK & type.id));
         }
         return attributes;
     }
@@ -177,7 +183,7 @@ public final class Record {
         crc.update(CURRENT_MAGIC_VALUE);
         byte attributes = 0;
         if (type.id > 0) {
-            attributes = (byte) (attributes | (COMPRESSION_CODEC_MASK & type.id));
+            attributes = (byte)(attributes | (COMPRESSION_CODEC_MASK & type.id));
         }
         crc.update(attributes);
         // update for the key
@@ -197,7 +203,6 @@ public final class Record {
         }
         return crc.getValue();
     }
-
 
     /**
      * Compute the checksum of the record from the record contents
@@ -226,9 +231,9 @@ public final class Record {
     public void ensureValid() {
         if (!isValid()) {
             throw new InvalidRecordException("Record is corrupt (stored crc = " + checksum()
-                                             + ", computed crc = "
-                                             + computeChecksum()
-                                             + ")");
+            + ", computed crc = "
+            + computeChecksum()
+            + ")");
         }
     }
 
@@ -322,12 +327,12 @@ public final class Record {
     @Override
     public String toString() {
         return String.format("Record(magic = %d, attributes = %d, compression = %s, crc = %d, key = %d bytes, value = %d bytes)",
-                             magic(),
-                             attributes(),
-                             compressionType(),
-                             checksum(),
-                             key() == null ? 0 : key().limit(),
-                             value() == null ? 0 : value().limit());
+        magic(),
+        attributes(),
+        compressionType(),
+        checksum(),
+        key() == null ? 0 : key().limit(),
+        value() == null ? 0 : value().limit());
     }
 
     @Override
@@ -341,7 +346,7 @@ public final class Record {
         if (!other.getClass().equals(Record.class)) {
             return false;
         }
-        Record record = (Record) other;
+        Record record = (Record)other;
         return this.buffer.equals(record.buffer);
     }
 
