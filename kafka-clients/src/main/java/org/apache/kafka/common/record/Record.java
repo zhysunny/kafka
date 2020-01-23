@@ -205,14 +205,14 @@ public final class Record {
     }
 
     /**
-     * Compute the checksum of the record from the record contents
+     * 从记录内容计算记录的校验和
      */
     public long computeChecksum() {
         return computeChecksum(buffer, MAGIC_OFFSET, buffer.limit() - MAGIC_OFFSET);
     }
 
     /**
-     * Retrieve the previously computed CRC for this record
+     * 检索此记录的先前计算的CRC
      */
     public long checksum() {
         return Utils.readUnsignedInt(buffer, CRC_OFFSET);
