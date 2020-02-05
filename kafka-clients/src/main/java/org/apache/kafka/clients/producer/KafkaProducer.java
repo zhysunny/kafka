@@ -278,7 +278,7 @@ public class KafkaProducer<K, V> implements Producer<K, V> {
 
             Map<String, String> metricTags = new LinkedHashMap<String, String>();
             metricTags.put("client-id", clientId);
-            // batch.size  default=16348
+            // batch.size  default=16384
             this.accumulator = new RecordAccumulator(config.getInt(ProducerConfig.BATCH_SIZE_CONFIG),
             // 默认32M
             this.totalMemorySize,
