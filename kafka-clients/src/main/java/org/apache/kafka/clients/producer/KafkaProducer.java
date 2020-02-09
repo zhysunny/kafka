@@ -294,6 +294,7 @@ public class KafkaProducer<K, V> implements Producer<K, V> {
             List<InetSocketAddress> addresses = ClientUtils.parseAndValidateAddresses(
             // bootstrap.servers
             config.getList(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG));
+            // 更新metadata
             this.metadata.update(Cluster.bootstrap(addresses), time.milliseconds());
             ChannelBuilder channelBuilder = ClientUtils.createChannelBuilder(config.values());
             NetworkClient client = new NetworkClient(
@@ -442,7 +443,7 @@ public class KafkaProducer<K, V> implements Producer<K, V> {
     @Override
     public Future<RecordMetadata> send(ProducerRecord<K, V> record, Callback callback) {
         try {
-            // 首先，确保主题的元数据可用
+            // 首先，确保topic的元数据可用
             long waitedOnMetadataMs = waitOnMetadata(record.topic(), this.maxBlockTimeMs);
             long remainingWaitMs = Math.max(0, this.maxBlockTimeMs - waitedOnMetadataMs);
             // 序列化
