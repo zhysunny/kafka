@@ -206,15 +206,15 @@ public class KafkaProducer<K, V> implements Producer<K, V> {
             MetricConfig metricConfig = new MetricConfig()
             // metrics.num.samples  default=2
             .samples(config.getInt(ProducerConfig.METRICS_NUM_SAMPLES_CONFIG))
-            // metrics.sample.window.ms  default=30000
+            // metrics.sample.window.ms  default=30*1000
             .timeWindow(config.getLong(ProducerConfig.METRICS_SAMPLE_WINDOW_MS_CONFIG), TimeUnit.MILLISECONDS);
             // client.id  default=""
             clientId = config.getString(ProducerConfig.CLIENT_ID_CONFIG);
             if (clientId.length() <= 0) {
                 clientId = "producer-" + PRODUCER_CLIENT_ID_SEQUENCE.getAndIncrement();
             }
-            // metric.reporters  default=""
             List<MetricsReporter> reporters = config
+            // metric.reporters  default=""
             .getConfiguredInstances(ProducerConfig.METRIC_REPORTER_CLASSES_CONFIG, MetricsReporter.class);
             // 默认添加JmxReporter
             reporters.add(new JmxReporter(JMX_PREFIX));
@@ -276,7 +276,7 @@ public class KafkaProducer<K, V> implements Producer<K, V> {
                 this.requestTimeoutMs = config.getInt(ProducerConfig.REQUEST_TIMEOUT_MS_CONFIG);
             }
 
-            Map<String, String> metricTags = new LinkedHashMap<String, String>();
+            Map<String, String> metricTags = new LinkedHashMap<>();
             metricTags.put("client-id", clientId);
             // batch.size  default=16384
             this.accumulator = new RecordAccumulator(config.getInt(ProducerConfig.BATCH_SIZE_CONFIG),
