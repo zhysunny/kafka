@@ -3,9 +3,9 @@
  * file distributed with this work for additional information regarding copyright ownership. The ASF licenses this file
  * to You under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the
  * License. You may obtain a copy of the License at
- * 
+ * <p>
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ * <p>
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
@@ -16,21 +16,14 @@ import org.apache.kafka.clients.consumer.ConsumerRebalanceListener;
 import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.clients.consumer.OffsetResetStrategy;
 import org.apache.kafka.common.TopicPartition;
-
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.regex.Pattern;
 
 /**
  * A class for tracking the topics, partitions, and offsets for the consumer. A partition
  * is "assigned" either directly with {@link #assignFromUser(Collection)} (manual assignment)
  * or with {@link #assignFromSubscribed(Collection)} (automatic assignment from subscription).
- *
+ * <p>
  * Once assigned, the partition is not considered "fetchable" until its initial position has
  * been set with {@link #seek(TopicPartition, long)}. Fetchable partitions track a fetch
  * position which is used to set the offset of the next fetch, and a consumed position
@@ -38,13 +31,22 @@ import java.util.regex.Pattern;
  * from a partition through {@link #pause(TopicPartition)} without affecting the fetched/consumed
  * offsets. The partition will remain unfetchable until the {@link #resume(TopicPartition)} is
  * used. You can also query the pause state independently with {@link #isPaused(TopicPartition)}.
- *
+ * <p>
  * Note that pause state as well as fetch/consumed positions are not preserved when partition
  * assignment is changed whether directly by the user or through a group rebalance.
- *
+ * <p>
  * This class also maintains a cache of the latest commit position for each of the assigned
  * partitions. This is updated through {@link #committed(TopicPartition, OffsetAndMetadata)} and can be used
  * to set the initial fetch position (e.g. {@link Fetcher#resetOffset(TopicPartition)}.
+ */
+
+/**
+ * 三种消费者指定方式
+ * 1.subscribe(List topics)自动分配分区
+ * 2.subscribe(Pattern pattern)模式匹配,自动分配分区
+ * 3.assign()指定分区
+ * @author 章云
+ * @date 2020/2/17 8:57
  */
 public class SubscriptionState {
 
@@ -63,7 +65,9 @@ public class SubscriptionState {
     /* the list of partitions currently assigned */
     private final Map<TopicPartition, TopicPartitionState> assignment;
 
-    /* do we need to request a partition assignment from the coordinator? */
+    /**
+     * 我们需要从协调器请求一个分区分配吗?
+     */
     private boolean needsPartitionAssignment;
 
     /* do we need to request the latest committed offsets from the coordinator? */
@@ -75,8 +79,7 @@ public class SubscriptionState {
     /* Listener to be invoked when assignment changes */
     private ConsumerRebalanceListener listener;
 
-    private static final String SUBSCRIPTION_EXCEPTION_MESSAGE =
-        "Subscription to topics, partitions and pattern are mutually exclusive";
+    private static final String SUBSCRIPTION_EXCEPTION_MESSAGE = "Subscription to topics, partitions and pattern are mutually exclusive";
 
     public SubscriptionState(OffsetResetStrategy defaultResetStrategy) {
         this.defaultResetStrategy = defaultResetStrategy;
@@ -93,13 +96,11 @@ public class SubscriptionState {
         if (listener == null) {
             throw new IllegalArgumentException("RebalanceListener cannot be null");
         }
-
         if (!this.userAssignment.isEmpty() || this.subscribedPattern != null) {
+            // 指定主题，自动分配分区，与其他两种互斥
             throw new IllegalStateException(SUBSCRIPTION_EXCEPTION_MESSAGE);
         }
-
         this.listener = listener;
-
         changeSubscription(topics);
     }
 
@@ -109,8 +110,7 @@ public class SubscriptionState {
             this.subscription.addAll(topicsToSubscribe);
             this.groupSubscription.addAll(topicsToSubscribe);
             this.needsPartitionAssignment = true;
-
-            // Remove any assigned partitions which are no longer subscribed to
+            // 删除任何已分配的不再订阅的分区
             for (Iterator<TopicPartition> it = assignment.keySet().iterator(); it.hasNext(); ) {
                 TopicPartition tp = it.next();
                 if (!subscription.contains(tp.topic())) {
@@ -121,9 +121,9 @@ public class SubscriptionState {
     }
 
     /**
-     * Add topics to the current group subscription. This is used by the group leader to ensure
-     * that it receives metadata updates for all topics that the group is interested in.
-     * @param topics The topics to add to the group subscription
+     * 向当前组订阅添加主题。
+     * 组长使用它来确保它接收到组感兴趣的所有主题的元数据更新。
+     * @param topics 要添加到组订阅的主题
      */
     public void groupSubscribe(Collection<String> topics) {
         if (!this.userAssignment.isEmpty()) {
@@ -138,12 +138,11 @@ public class SubscriptionState {
     }
 
     /**
-     * Change the assignment to the specified partitions provided by the user,
-     * note this is different from {@link #assignFromSubscribed(Collection)}
-     * whose input partitions are provided from the subscribed topics.
+     * 将分配更改为用户提供的指定分区，注意这与{@link #assignFromSubscribed(Collection)}不同，后者的输入分区来自订阅的主题。
      */
     public void assignFromUser(Collection<TopicPartition> partitions) {
         if (!this.subscription.isEmpty() || this.subscribedPattern != null) {
+            // 用户指定分区，与其他两种互斥
             throw new IllegalStateException(SUBSCRIPTION_EXCEPTION_MESSAGE);
         }
 
@@ -172,7 +171,7 @@ public class SubscriptionState {
             }
         }
         this.assignment.clear();
-        for (TopicPartition tp: assignments) {
+        for (TopicPartition tp : assignments) {
             addAssignedPartition(tp);
         }
         this.needsPartitionAssignment = false;
@@ -184,6 +183,7 @@ public class SubscriptionState {
         }
 
         if (!this.subscription.isEmpty() || !this.userAssignment.isEmpty()) {
+            // 模式匹配，与其他两种互斥
             throw new IllegalStateException(SUBSCRIPTION_EXCEPTION_MESSAGE);
         }
 
@@ -203,7 +203,6 @@ public class SubscriptionState {
         this.subscribedPattern = null;
     }
 
-
     public Pattern getSubscribedPattern() {
         return this.subscribedPattern;
     }
@@ -220,7 +219,7 @@ public class SubscriptionState {
      * can do the partition assignment (which requires at least partition counts for all topics
      * to be assigned).
      * @return The union of all subscribed topics in the group if this member is the leader
-     *   of the current generation; otherwise it returns the same set as {@link #subscription()}
+     * of the current generation; otherwise it returns the same set as {@link #subscription()}
      */
     public Set<String> groupSubscription() {
         return this.groupSubscription;

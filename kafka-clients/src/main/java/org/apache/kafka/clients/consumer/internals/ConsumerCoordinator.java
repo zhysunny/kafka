@@ -55,14 +55,14 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * This class manages the coordination process with the consumer coordinator.
+ * 该类使用使用者协调器管理协调过程。
  */
 public final class ConsumerCoordinator extends AbstractCoordinator {
 
     private static final Logger log = LoggerFactory.getLogger(ConsumerCoordinator.class);
 
     private final List<PartitionAssignor> assignors;
-    private final org.apache.kafka.clients.Metadata metadata;
+    private final Metadata metadata;
     private final MetadataSnapshot metadataSnapshot;
     private final ConsumerCoordinatorMetrics sensors;
     private final SubscriptionState subscriptions;

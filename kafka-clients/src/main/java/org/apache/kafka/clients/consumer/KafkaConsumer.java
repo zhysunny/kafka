@@ -918,7 +918,7 @@ public class KafkaConsumer<K, V> implements Consumer<K, V> {
         // TODO: Sub-requests should take into account the poll timeout (KAFKA-1894)
         coordinator.ensureCoordinatorKnown();
 
-        // ensure we have partitions assigned if we expect to
+        // 如果我们希望的话，确保分配了分区
         if (subscriptions.partitionsAutoAssigned()) {
             coordinator.ensurePartitionAssignment();
         }

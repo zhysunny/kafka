@@ -3,9 +3,9 @@
  * file distributed with this work for additional information regarding copyright ownership. The ASF licenses this file
  * to You under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the
  * License. You may obtain a copy of the License at
- *
+ * <p>
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
@@ -54,13 +54,11 @@ public interface PartitionAssignor {
      */
     Map<String, Assignment> assign(Cluster metadata, Map<String, Subscription> subscriptions);
 
-
     /**
      * Callback which is invoked when a group member receives its assignment from the leader.
      * @param assignment The local member's assignment as provided by the leader in {@link #assign(Cluster, Map)}
      */
     void onAssignment(Assignment assignment);
-
 
     /**
      * Unique name for this assignor (e.g. "range" or "roundrobin")
@@ -68,6 +66,9 @@ public interface PartitionAssignor {
      */
     String name();
 
+    /**
+     * 自动分配分区
+     */
     class Subscription {
         private final List<String> topics;
         private final ByteBuffer userData;
@@ -91,6 +92,9 @@ public interface PartitionAssignor {
 
     }
 
+    /**
+     * 手动指定分区
+     */
     class Assignment {
         private final List<TopicPartition> partitions;
         private final ByteBuffer userData;

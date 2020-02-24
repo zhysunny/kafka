@@ -172,7 +172,7 @@ public abstract class AbstractCoordinator implements Closeable {
                                            ByteBuffer memberAssignment);
 
     /**
-     * Block until the coordinator for this group is known.
+     * 阻塞，直到知道此组的协调器为止。
      */
     public void ensureCoordinatorKnown() {
         while (coordinatorUnknown()) {
@@ -551,6 +551,7 @@ public abstract class AbstractCoordinator implements Closeable {
 
     /**
      * Leave the current group and reset local generation/memberId.
+     * 离开当前组并重置本地generation/memberId。
      */
     public void maybeLeaveGroup() {
         client.unschedule(heartbeatTask);

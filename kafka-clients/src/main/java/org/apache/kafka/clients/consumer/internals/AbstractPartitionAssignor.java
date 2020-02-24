@@ -25,8 +25,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Abstract assignor implementation which does some common grunt work (in particular collecting
- * partition counts which are always needed in assignors).
+ * 抽象的转让者实现，它做一些普通的繁琐的工作(特别是收集在转让者中总是需要的分区计数)。
  */
 public abstract class AbstractPartitionAssignor implements PartitionAssignor {
     private static final Logger log = LoggerFactory.getLogger(AbstractPartitionAssignor.class);
