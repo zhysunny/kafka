@@ -3,9 +3,9 @@
  * file distributed with this work for additional information regarding copyright ownership. The ASF licenses this file
  * to You under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the
  * License. You may obtain a copy of the License at
- *
+ * <p>
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
@@ -471,7 +471,7 @@ public class KafkaConsumer<K, V> implements Consumer<K, V> {
     private final SubscriptionState subscriptions;
     private final Metadata metadata;
     private final long retryBackoffMs;
-    private long requestTimeoutMs;
+    private int requestTimeoutMs;
     private boolean closed = false;
 
     // currentThread holds the threadId of the current thread accessing KafkaConsumer
@@ -507,11 +507,11 @@ public class KafkaConsumer<K, V> implements Consumer<K, V> {
      *            won't be called in the consumer when the deserializer is passed in directly.
      */
     public KafkaConsumer(Map<String, Object> configs,
-                         Deserializer<K> keyDeserializer,
-                         Deserializer<V> valueDeserializer) {
+    Deserializer<K> keyDeserializer,
+    Deserializer<V> valueDeserializer) {
         this(new ConsumerConfig(ConsumerConfig.addDeserializerToConfig(configs, keyDeserializer, valueDeserializer)),
-            keyDeserializer,
-            valueDeserializer);
+        keyDeserializer,
+        valueDeserializer);
     }
 
     /**
@@ -537,79 +537,107 @@ public class KafkaConsumer<K, V> implements Consumer<K, V> {
      *            won't be called in the consumer when the deserializer is passed in directly.
      */
     public KafkaConsumer(Properties properties,
-                         Deserializer<K> keyDeserializer,
-                         Deserializer<V> valueDeserializer) {
+    Deserializer<K> keyDeserializer,
+    Deserializer<V> valueDeserializer) {
         this(new ConsumerConfig(ConsumerConfig.addDeserializerToConfig(properties, keyDeserializer, valueDeserializer)),
-             keyDeserializer,
-             valueDeserializer);
+        keyDeserializer,
+        valueDeserializer);
     }
 
     @SuppressWarnings("unchecked")
     private KafkaConsumer(ConsumerConfig config,
-                          Deserializer<K> keyDeserializer,
-                          Deserializer<V> valueDeserializer) {
+    Deserializer<K> keyDeserializer,
+    Deserializer<V> valueDeserializer) {
         try {
             log.debug("Starting the Kafka consumer");
+            // request.timeout.ms  default=40*1000
             this.requestTimeoutMs = config.getInt(ConsumerConfig.REQUEST_TIMEOUT_MS_CONFIG);
+            // session.timeout.ms  default=30*1000
             int sessionTimeOutMs = config.getInt(ConsumerConfig.SESSION_TIMEOUT_MS_CONFIG);
+            // fetch.max.wait.ms  default=500
             int fetchMaxWaitMs = config.getInt(ConsumerConfig.FETCH_MAX_WAIT_MS_CONFIG);
             if (this.requestTimeoutMs <= sessionTimeOutMs || this.requestTimeoutMs <= fetchMaxWaitMs) {
-                throw new ConfigException(ConsumerConfig.REQUEST_TIMEOUT_MS_CONFIG + " should be greater than " + ConsumerConfig.SESSION_TIMEOUT_MS_CONFIG + " and " + ConsumerConfig.FETCH_MAX_WAIT_MS_CONFIG);
+                throw new ConfigException(
+                ConsumerConfig.REQUEST_TIMEOUT_MS_CONFIG + " should be greater than " + ConsumerConfig.SESSION_TIMEOUT_MS_CONFIG + " and "
+                + ConsumerConfig.FETCH_MAX_WAIT_MS_CONFIG);
             }
             this.time = new SystemTime();
 
-            MetricConfig metricConfig = new MetricConfig().samples(config.getInt(ConsumerConfig.METRICS_NUM_SAMPLES_CONFIG))
-                    .timeWindow(config.getLong(ConsumerConfig.METRICS_SAMPLE_WINDOW_MS_CONFIG),
-                            TimeUnit.MILLISECONDS);
+            MetricConfig metricConfig = new MetricConfig()
+            // metrics.num.samples  default=2
+            .samples(config.getInt(ConsumerConfig.METRICS_NUM_SAMPLES_CONFIG))
+            // metrics.sample.window.ms  default=30*1000
+            .timeWindow(config.getLong(ConsumerConfig.METRICS_SAMPLE_WINDOW_MS_CONFIG), TimeUnit.MILLISECONDS);
+            // client.id  default=""
             clientId = config.getString(ConsumerConfig.CLIENT_ID_CONFIG);
             if (clientId.length() <= 0) {
                 clientId = "consumer-" + CONSUMER_CLIENT_ID_SEQUENCE.getAndIncrement();
             }
-            List<MetricsReporter> reporters = config.getConfiguredInstances(ConsumerConfig.METRIC_REPORTER_CLASSES_CONFIG,
-                    MetricsReporter.class);
+            List<MetricsReporter> reporters = config
+            // metric.reporters  default=""
+            .getConfiguredInstances(ConsumerConfig.METRIC_REPORTER_CLASSES_CONFIG, MetricsReporter.class);
+            // 默认添加JmxReporter
             reporters.add(new JmxReporter(JMX_PREFIX));
+            // 度量
             this.metrics = new Metrics(metricConfig, reporters, time);
+            // retry.backoff.ms  default=100
             this.retryBackoffMs = config.getLong(ConsumerConfig.RETRY_BACKOFF_MS_CONFIG);
+            // metadata.max.age.ms  default=5*60*1000
             this.metadata = new Metadata(retryBackoffMs, config.getLong(ConsumerConfig.METADATA_MAX_AGE_CONFIG));
-            List<InetSocketAddress> addresses = ClientUtils.parseAndValidateAddresses(config.getList(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG));
+            // bootstrap.servers
+            List<InetSocketAddress> addresses = ClientUtils
+            .parseAndValidateAddresses(config.getList(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG));
+            // 更新metadata
             this.metadata.update(Cluster.bootstrap(addresses), 0);
             String metricGrpPrefix = "consumer";
             Map<String, String> metricsTags = new LinkedHashMap<String, String>();
             metricsTags.put("client-id", clientId);
             ChannelBuilder channelBuilder = ClientUtils.createChannelBuilder(config.values());
             NetworkClient netClient = new NetworkClient(
-                    new Selector(config.getLong(ConsumerConfig.CONNECTIONS_MAX_IDLE_MS_CONFIG), metrics, time, metricGrpPrefix, metricsTags, channelBuilder),
-                    this.metadata,
-                    clientId,
-                    100, // a fixed large enough value will suffice
-                    config.getLong(ConsumerConfig.RECONNECT_BACKOFF_MS_CONFIG),
-                    config.getInt(ConsumerConfig.SEND_BUFFER_CONFIG),
-                    config.getInt(ConsumerConfig.RECEIVE_BUFFER_CONFIG),
-                    config.getInt(ConsumerConfig.REQUEST_TIMEOUT_MS_CONFIG), time);
+            // connections.max.idle.ms  default=9*60*1000
+            new Selector(config.getLong(ConsumerConfig.CONNECTIONS_MAX_IDLE_MS_CONFIG), metrics, time, metricGrpPrefix, metricsTags,
+            channelBuilder),
+            this.metadata,
+            clientId,
+            100, // a fixed large enough value will suffice
+            // reconnect.backoff.ms  default=50
+            config.getLong(ConsumerConfig.RECONNECT_BACKOFF_MS_CONFIG),
+            // send.buffer.bytes  default=128*1024
+            config.getInt(ConsumerConfig.SEND_BUFFER_CONFIG),
+            // receive.buffer.bytes  default=32*1024
+            config.getInt(ConsumerConfig.RECEIVE_BUFFER_CONFIG),
+            this.requestTimeoutMs, time);
             this.client = new ConsumerNetworkClient(netClient, metadata, time, retryBackoffMs);
-            OffsetResetStrategy offsetResetStrategy = OffsetResetStrategy.valueOf(config.getString(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG).toUpperCase());
+            OffsetResetStrategy offsetResetStrategy = OffsetResetStrategy
+            // auto.offset.reset  default=latest
+            .valueOf(config.getString(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG).toUpperCase());
             this.subscriptions = new SubscriptionState(offsetResetStrategy);
-            List<PartitionAssignor> assignors = config.getConfiguredInstances(
-                    ConsumerConfig.PARTITION_ASSIGNMENT_STRATEGY_CONFIG,
-                    PartitionAssignor.class);
+            // partition.assignment.strategy  default=org.apache.kafka.clients.consumer.RangeAssignor
+            List<PartitionAssignor> assignors = config.getConfiguredInstances(ConsumerConfig.PARTITION_ASSIGNMENT_STRATEGY_CONFIG,
+            PartitionAssignor.class);
             this.coordinator = new ConsumerCoordinator(this.client,
-                    config.getString(ConsumerConfig.GROUP_ID_CONFIG),
-                    config.getInt(ConsumerConfig.SESSION_TIMEOUT_MS_CONFIG),
-                    config.getInt(ConsumerConfig.HEARTBEAT_INTERVAL_MS_CONFIG),
-                    assignors,
-                    this.metadata,
-                    this.subscriptions,
-                    metrics,
-                    metricGrpPrefix,
-                    metricsTags,
-                    this.time,
-                    retryBackoffMs,
-                    new ConsumerCoordinator.DefaultOffsetCommitCallback(),
-                    config.getBoolean(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG),
-                    config.getLong(ConsumerConfig.AUTO_COMMIT_INTERVAL_MS_CONFIG));
+            // group.id  default=""
+            config.getString(ConsumerConfig.GROUP_ID_CONFIG),
+            // session.timeout.ms
+            sessionTimeOutMs,
+            // heartbeat.interval.ms  default=3*1000
+            config.getInt(ConsumerConfig.HEARTBEAT_INTERVAL_MS_CONFIG),
+            assignors,
+            this.metadata,
+            this.subscriptions,
+            metrics,
+            metricGrpPrefix,
+            metricsTags,
+            this.time,
+            retryBackoffMs,
+            new ConsumerCoordinator.DefaultOffsetCommitCallback(),
+            // enable.auto.commit  default=true
+            config.getBoolean(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG),
+            // auto.commit.interval.ms  default=5*1000
+            config.getLong(ConsumerConfig.AUTO_COMMIT_INTERVAL_MS_CONFIG));
             if (keyDeserializer == null) {
                 this.keyDeserializer = config.getConfiguredInstance(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG,
-                        Deserializer.class);
+                Deserializer.class);
                 this.keyDeserializer.configure(config.originals(), true);
             } else {
                 config.ignore(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG);
@@ -617,26 +645,30 @@ public class KafkaConsumer<K, V> implements Consumer<K, V> {
             }
             if (valueDeserializer == null) {
                 this.valueDeserializer = config.getConfiguredInstance(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG,
-                        Deserializer.class);
+                Deserializer.class);
                 this.valueDeserializer.configure(config.originals(), false);
             } else {
                 config.ignore(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG);
                 this.valueDeserializer = valueDeserializer;
             }
             this.fetcher = new Fetcher<>(this.client,
-                    config.getInt(ConsumerConfig.FETCH_MIN_BYTES_CONFIG),
-                    config.getInt(ConsumerConfig.FETCH_MAX_WAIT_MS_CONFIG),
-                    config.getInt(ConsumerConfig.MAX_PARTITION_FETCH_BYTES_CONFIG),
-                    config.getBoolean(ConsumerConfig.CHECK_CRCS_CONFIG),
-                    this.keyDeserializer,
-                    this.valueDeserializer,
-                    this.metadata,
-                    this.subscriptions,
-                    metrics,
-                    metricGrpPrefix,
-                    metricsTags,
-                    this.time,
-                    this.retryBackoffMs);
+            // fetch.min.bytes  default=1
+            config.getInt(ConsumerConfig.FETCH_MIN_BYTES_CONFIG),
+            // fetch.max.wait.ms  default=500
+            config.getInt(ConsumerConfig.FETCH_MAX_WAIT_MS_CONFIG),
+            // max.partition.fetch.bytes  default=1*1024*1024
+            config.getInt(ConsumerConfig.MAX_PARTITION_FETCH_BYTES_CONFIG),
+            // check.crcs  default=true
+            config.getBoolean(ConsumerConfig.CHECK_CRCS_CONFIG),
+            this.keyDeserializer,
+            this.valueDeserializer,
+            this.metadata,
+            this.subscriptions,
+            metrics,
+            metricGrpPrefix,
+            metricsTags,
+            this.time,
+            this.retryBackoffMs);
 
             config.logUnused();
             AppInfoParser.registerAppInfo(JMX_PREFIX, clientId);
@@ -859,14 +891,8 @@ public class KafkaConsumer<K, V> implements Consumer<K, V> {
             do {
                 Map<TopicPartition, List<ConsumerRecord<K, V>>> records = pollOnce(remaining);
                 if (!records.isEmpty()) {
-                    // before returning the fetched records, we can send off the next round of fetches
-                    // and avoid block waiting for their responses to enable pipelining while the user
-                    // is handling the fetched records.
-                    //
-                    // NOTE that we use quickPoll() in this case which disables wakeups and delayed
-                    // task execution since the consumed positions has already been updated and we
-                    // must return these records to users to process before being interrupted or
-                    // auto-committing offsets
+                    // 在返回获取的记录之前，我们可以发送下一轮的获取并避免在用户处理获取的记录时阻塞等待它们的响应以启用管道。
+                    // 注意，我们在本例中使用了quickPoll()，它禁用了唤醒和延迟任务执行，因为所使用的位置已经被更新，我们必须在中断或自动提交偏移量之前将这些记录返回给用户进行处理
                     fetcher.initFetches(metadata.fetch());
                     client.quickPoll();
                     return new ConsumerRecords<>(records);
@@ -892,7 +918,7 @@ public class KafkaConsumer<K, V> implements Consumer<K, V> {
         // TODO: Sub-requests should take into account the poll timeout (KAFKA-1894)
         coordinator.ensureCoordinatorKnown();
 
-        // ensure we have partitions assigned if we expect to
+        // 如果我们希望的话，确保分配了分区
         if (subscriptions.partitionsAutoAssigned()) {
             coordinator.ensurePartitionAssignment();
         }
@@ -1065,7 +1091,7 @@ public class KafkaConsumer<K, V> implements Consumer<K, V> {
         acquire();
         try {
             Collection<TopicPartition> parts = partitions.length == 0 ? this.subscriptions.assignedPartitions()
-                    : Arrays.asList(partitions);
+            : Arrays.asList(partitions);
             for (TopicPartition tp : parts) {
                 log.debug("Seeking to beginning of partition {}", tp);
                 subscriptions.needOffsetReset(tp, OffsetResetStrategy.EARLIEST);
@@ -1084,7 +1110,7 @@ public class KafkaConsumer<K, V> implements Consumer<K, V> {
         acquire();
         try {
             Collection<TopicPartition> parts = partitions.length == 0 ? this.subscriptions.assignedPartitions()
-                    : Arrays.asList(partitions);
+            : Arrays.asList(partitions);
             for (TopicPartition tp : parts) {
                 log.debug("Seeking to end of partition {}", tp);
                 subscriptions.needOffsetReset(tp, OffsetResetStrategy.LATEST);
@@ -1203,7 +1229,6 @@ public class KafkaConsumer<K, V> implements Consumer<K, V> {
     /**
      * Get metadata about partitions for all topics that the user is authorized to view. This method will issue a
      * remote call to the server.
-
      * @return The map of topics and its partitions
      * @throws org.apache.kafka.common.errors.WakeupException if {@link #wakeup()} is called before or while this
      *             function is called
@@ -1232,7 +1257,7 @@ public class KafkaConsumer<K, V> implements Consumer<K, V> {
     public void pause(TopicPartition... partitions) {
         acquire();
         try {
-            for (TopicPartition partition: partitions) {
+            for (TopicPartition partition : partitions) {
                 log.debug("Pausing partition {}", partition);
                 subscriptions.pause(partition);
             }
@@ -1251,7 +1276,7 @@ public class KafkaConsumer<K, V> implements Consumer<K, V> {
     public void resume(TopicPartition... partitions) {
         acquire();
         try {
-            for (TopicPartition partition: partitions) {
+            for (TopicPartition partition : partitions) {
                 log.debug("Resuming partition {}", partition);
                 subscriptions.resume(partition);
             }

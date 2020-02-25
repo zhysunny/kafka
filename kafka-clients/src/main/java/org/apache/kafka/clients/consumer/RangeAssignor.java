@@ -30,10 +30,10 @@ import java.util.Map;
  * and the consumers in lexicographic order. We then divide the number of partitions by the total number of
  * consumers to determine the number of partitions to assign to each consumer. If it does not evenly
  * divide, then the first few consumers will have one extra partition.
- *
+ * <p>
  * For example, suppose there are two consumers C0 and C1, two topics t0 and t1, and each topic has 3 partitions,
  * resulting in partitions t0p0, t0p1, t0p2, t1p0, t1p1, and t1p2.
- *
+ * <p>
  * The assignment will be:
  * C0: [t0p0, t0p1, t1p0, t1p1]
  * C1: [t0p2, t1p2]
@@ -45,9 +45,14 @@ public class RangeAssignor extends AbstractPartitionAssignor {
         return "range";
     }
 
-    private List<TopicPartition> partitions(String topic,
-                                            int numPartitions) {
-        List<TopicPartition> partitions = new ArrayList<>();
+    /**
+     * 通过topic名和分区数获得分区列表
+     * @param topic
+     * @param numPartitions
+     * @return
+     */
+    private List<TopicPartition> partitions(String topic, int numPartitions) {
+        List<TopicPartition> partitions = new ArrayList<>(numPartitions);
         for (int i = 0; i < numPartitions; i++) {
             partitions.add(new TopicPartition(topic, i));
         }
@@ -66,12 +71,11 @@ public class RangeAssignor extends AbstractPartitionAssignor {
     }
 
     @Override
-    public Map<String, List<TopicPartition>> assign(Map<String, Integer> partitionsPerTopic,
-                                                    Map<String, List<String>> subscriptions) {
+    public Map<String, List<TopicPartition>> assign(Map<String, Integer> partitionsPerTopic, Map<String, List<String>> subscriptions) {
         Map<String, List<String>> consumersPerTopic = consumersPerTopic(subscriptions);
         Map<String, List<TopicPartition>> assignment = new HashMap<>();
         for (String memberId : subscriptions.keySet()) {
-            assignment.put(memberId, new ArrayList<TopicPartition>());
+            assignment.put(memberId, new ArrayList<>());
         }
 
         for (Map.Entry<String, List<String>> topicEntry : consumersPerTopic.entrySet()) {

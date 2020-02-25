@@ -69,33 +69,34 @@ public final class RecordAccumulator {
     private final long retryBackoffMs;
     private final BufferPool free;
     private final Time time;
+    /**
+     * 每个分区一个双端队列
+     */
     private final ConcurrentMap<TopicPartition, Deque<RecordBatch>> batches;
     private final IncompleteRecordBatches incomplete;
 
-
     /**
      * Create a new record accumulator
-     *
-     * @param batchSize The size to use when allocating {@link org.apache.kafka.common.record.MemoryRecords} instances
-     * @param totalSize The maximum memory the record accumulator can use.
-     * @param compression The compression codec for the records
-     * @param lingerMs An artificial delay time to add before declaring a records instance that isn't full ready for
-     *        sending. This allows time for more records to arrive. Setting a non-zero lingerMs will trade off some
-     *        latency for potentially better throughput due to more batching (and hence fewer, larger requests).
+     * @param batchSize      The size to use when allocating {@link org.apache.kafka.common.record.MemoryRecords} instances
+     * @param totalSize      The maximum memory the record accumulator can use.
+     * @param compression    The compression codec for the records
+     * @param lingerMs       An artificial delay time to add before declaring a records instance that isn't full ready for
+     *                       sending. This allows time for more records to arrive. Setting a non-zero lingerMs will trade off some
+     *                       latency for potentially better throughput due to more batching (and hence fewer, larger requests).
      * @param retryBackoffMs An artificial delay time to retry the produce request upon receiving an error. This avoids
-     *        exhausting all retries in a short period of time.
-     * @param metrics The metrics
-     * @param time The time instance to use
-     * @param metricTags additional key/value attributes of the metric
+     *                       exhausting all retries in a short period of time.
+     * @param metrics        The metrics
+     * @param time           The time instance to use
+     * @param metricTags     additional key/value attributes of the metric
      */
     public RecordAccumulator(int batchSize,
-                             long totalSize,
-                             CompressionType compression,
-                             long lingerMs,
-                             long retryBackoffMs,
-                             Metrics metrics,
-                             Time time,
-                             Map<String, String> metricTags) {
+    long totalSize,
+    CompressionType compression,
+    long lingerMs,
+    long retryBackoffMs,
+    Metrics metrics,
+    Time time,
+    Map<String, String> metricTags) {
         this.drainIndex = 0;
         this.closed = false;
         this.flushesInProgress = new AtomicInteger(0);
@@ -113,7 +114,8 @@ public final class RecordAccumulator {
     }
 
     private void registerMetrics(Metrics metrics, String metricGrpName, Map<String, String> metricTags) {
-        MetricName metricName = new MetricName("waiting-threads", metricGrpName, "The number of user threads blocked waiting for buffer memory to enqueue their records", metricTags);
+        MetricName metricName = new MetricName("waiting-threads", metricGrpName,
+        "The number of user threads blocked waiting for buffer memory to enqueue their records", metricTags);
         Measurable waitingThreads = new Measurable() {
             @Override
             public double measure(MetricConfig config, long now) {
@@ -122,7 +124,8 @@ public final class RecordAccumulator {
         };
         metrics.addMetric(metricName, waitingThreads);
 
-        metricName = new MetricName("buffer-total-bytes", metricGrpName, "The maximum amount of buffer memory the client can use (whether or not it is currently used).", metricTags);
+        metricName = new MetricName("buffer-total-bytes", metricGrpName,
+        "The maximum amount of buffer memory the client can use (whether or not it is currently used).", metricTags);
         Measurable totalBytes = new Measurable() {
             @Override
             public double measure(MetricConfig config, long now) {
@@ -131,7 +134,8 @@ public final class RecordAccumulator {
         };
         metrics.addMetric(metricName, totalBytes);
 
-        metricName = new MetricName("buffer-available-bytes", metricGrpName, "The total amount of buffer memory that is not being used (either unallocated or in the free list).", metricTags);
+        metricName = new MetricName("buffer-available-bytes", metricGrpName,
+        "The total amount of buffer memory that is not being used (either unallocated or in the free list).", metricTags);
         Measurable availableBytes = new Measurable() {
             @Override
             public double measure(MetricConfig config, long now) {
@@ -141,7 +145,8 @@ public final class RecordAccumulator {
         metrics.addMetric(metricName, availableBytes);
 
         Sensor bufferExhaustedRecordSensor = metrics.sensor("buffer-exhausted-records");
-        metricName = new MetricName("buffer-exhausted-rate", metricGrpName, "The average per-second number of record sends that are dropped due to buffer exhaustion", metricTags);
+        metricName = new MetricName("buffer-exhausted-rate", metricGrpName,
+        "The average per-second number of record sends that are dropped due to buffer exhaustion", metricTags);
         bufferExhaustedRecordSensor.add(metricName, new Rate());
     }
 
@@ -150,14 +155,14 @@ public final class RecordAccumulator {
      * <p>
      * The append result will contain the future metadata, and flag for whether the appended batch is full or a new batch is created
      * <p>
-     *
-     * @param tp The topic/partition to which this record is being sent
-     * @param key The key for the record
-     * @param value The value for the record
-     * @param callback The user-supplied callback to execute when the request is complete
+     * @param tp             The topic/partition to which this record is being sent
+     * @param key            The key for the record
+     * @param value          The value for the record
+     * @param callback       The user-supplied callback to execute when the request is complete
      * @param maxTimeToBlock The maximum time in milliseconds to block for buffer memory to be available
      */
-    public RecordAppendResult append(TopicPartition tp, byte[] key, byte[] value, Callback callback, long maxTimeToBlock) throws InterruptedException {
+    public RecordAppendResult append(TopicPartition tp, byte[] key, byte[] value, Callback callback, long maxTimeToBlock)
+    throws InterruptedException {
         // 我们跟踪附加线程的数量，以确保我们没有遗漏批次 abortIncompleteBatches().
         appendsInProgress.incrementAndGet();
         try {
@@ -331,11 +336,10 @@ public final class RecordAccumulator {
     /**
      * Drain all the data for the given nodes and collate them into a list of batches that will fit within the specified
      * size on a per-node basis. This method attempts to avoid choosing the same topic-node over and over.
-     *
      * @param cluster The current cluster metadata
-     * @param nodes The list of node to drain
+     * @param nodes   The list of node to drain
      * @param maxSize The maximum number of bytes to drain
-     * @param now The current unix time in milliseconds
+     * @param now     The current unix time in milliseconds
      * @return A list of {@link RecordBatch} for each node specified with total size less than the requested maxSize.
      */
     public Map<Integer, List<RecordBatch>> drain(Cluster cluster, Set<Node> nodes, int maxSize, long now) {

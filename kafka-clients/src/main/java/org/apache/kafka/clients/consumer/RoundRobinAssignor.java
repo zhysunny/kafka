@@ -44,7 +44,7 @@ public class RoundRobinAssignor extends AbstractPartitionAssignor {
                                                     Map<String, List<String>> subscriptions) {
         Map<String, List<TopicPartition>> assignment = new HashMap<>();
         for (String memberId : subscriptions.keySet()) {
-            assignment.put(memberId, new ArrayList<TopicPartition>());
+            assignment.put(memberId, new ArrayList<>());
         }
 
         CircularIterator<String> assigner = new CircularIterator<>(Utils.sorted(subscriptions.keySet()));

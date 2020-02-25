@@ -3,134 +3,120 @@
  * file distributed with this work for additional information regarding copyright ownership. The ASF licenses this file
  * to You under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the
  * License. You may obtain a copy of the License at
- * 
+ * <p>
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ * <p>
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
 package org.apache.kafka.clients;
 
-import java.io.Closeable;
-import java.util.List;
-
 import org.apache.kafka.common.Node;
 import org.apache.kafka.common.protocol.ApiKeys;
 import org.apache.kafka.common.requests.RequestHeader;
+import java.io.Closeable;
+import java.util.List;
 
 /**
  * The interface for {@link NetworkClient}
+ * @author 章云
+ * @date 2020/2/9 22:00
  */
 public interface KafkaClient extends Closeable {
 
     /**
-     * Check if we are currently ready to send another request to the given node but don't attempt to connect if we
-     * aren't.
-     * 
-     * @param node The node to check
-     * @param now The current timestamp
+     * 检查当前是否准备好向给定节点发送另一个请求，但是如果没有准备好，不要尝试连接。
+     * @param node 要检查的节点
+     * @param now  当前时间戳
      */
-    public boolean isReady(Node node, long now);
+    boolean isReady(Node node, long now);
 
     /**
-     * Initiate a connection to the given node (if necessary), and return true if already connected. The readiness of a
-     * node will change only when poll is invoked.
-     * 
-     * @param node The node to connect to.
-     * @param now The current time
-     * @return true iff we are ready to immediately initiate the sending of another request to the given node.
+     * 启动到给定节点的连接(如果需要)，如果已经连接则返回true。
+     * 只有在调用轮询时，节点的就绪状态才会更改。
+     * @param node 要连接的节点。
+     * @param now  当前时间戳
+     * @return 如果我们准备立即开始向给定节点发送另一个请求，则为true
      */
-    public boolean ready(Node node, long now);
+    boolean ready(Node node, long now);
 
     /**
-     * Returns the number of milliseconds to wait, based on the connection state, before attempting to send data. When
-     * disconnected, this respects the reconnect backoff time. When connecting or connected, this handles slow/stalled
-     * connections.
-     * 
-     * @param node The node to check
-     * @param now The current timestamp
-     * @return The number of milliseconds to wait.
+     * 根据连接状态返回尝试发送数据之前等待的毫秒数。
+     * 断开连接时，这将考虑重新连接的回退时间。
+     * 当连接或连接时，它处理慢速/停顿的连接。
+     * @param node 要检查的节点
+     * @param now  当前时间戳
+     * @return 等待的毫秒数。
      */
-    public long connectionDelay(Node node, long now);
+    long connectionDelay(Node node, long now);
 
     /**
-     * Check if the connection of the node has failed, based on the connection state. Such connection failure are
-     * usually transient and can be resumed in the next {@link #ready(org.apache.kafka.common.Node, long)} }
-     * call, but there are cases where transient failures needs to be caught and re-acted upon.
-     *
-     * @param node the node to check
-     * @return true iff the connection has failed and the node is disconnected
+     * 根据连接状态检查节点的连接是否失败。
+     * 这种连接失败通常是暂时的，可以在下一次{@link #ready(org.apache.kafka.common.Node, long)}}调用中恢复，但是在某些情况下，需要捕获暂时故障并对其进行重新处理。
+     * @param node 要检查的节点
+     * @return 如果连接失败且节点断开连接，则为true
      */
-    public boolean connectionFailed(Node node);
+    boolean connectionFailed(Node node);
 
     /**
-     * Queue up the given request for sending. Requests can only be sent on ready connections.
-     * 
-     * @param request The request
-     * @param now The current timestamp
+     * 将给定的请求排队发送。
+     * 请求只能在就绪连接上发送。
+     * @param request 请求
+     * @param now     当前时间戳
      */
-    public void send(ClientRequest request, long now);
+    void send(ClientRequest request, long now);
 
     /**
-     * Do actual reads and writes from sockets.
-     * 
-     * @param timeout The maximum amount of time to wait for responses in ms, must be non-negative. The implementation
-     *                is free to use a lower value if appropriate (common reasons for this are a lower request or
-     *                metadata update timeout)
-     * @param now The current time in ms
-     * @throws IllegalStateException If a request is sent to an unready node
+     * 从套接字执行实际的读写操作。
+     * @param timeout 在ms中等待响应的最大时间量必须是非负的。实现可以在适当的情况下使用较低的值(其常见原因是较低的请求或元数据更新超时)
+     * @param now     当前时间戳
+     * @throws IllegalStateException 如果请求被发送到未准备好的节点
      */
-    public List<ClientResponse> poll(long timeout, long now);
+    List<ClientResponse> poll(long timeout, long now);
 
     /**
-     * Closes the connection to a particular node (if there is one).
-     *
-     * @param nodeId The id of the node
+     * 关闭到特定节点的连接(如果有的话)。
+     * @param nodeId 节点的id
      */
-    public void close(String nodeId);
+    void close(String nodeId);
 
     /**
-     * Choose the node with the fewest outstanding requests. This method will prefer a node with an existing connection,
-     * but will potentially choose a node for which we don't yet have a connection if all existing connections are in
-     * use.
-     * 
-     * @param now The current time in ms
-     * @return The node with the fewest in-flight requests.
+     * 选择未完成请求最少的节点。
+     * 此方法将首选具有现有连接的节点，但如果所有现有连接都在使用，则可能选择尚未具有连接的节点。
+     * @param now 当前时间戳
+     * @return 正在运行的请求最少的节点。
      */
-    public Node leastLoadedNode(long now);
+    Node leastLoadedNode(long now);
 
     /**
-     * The number of currently in-flight requests for which we have not yet returned a response
+     * 我们尚未返回响应的当前正在运行的请求的数量
      */
-    public int inFlightRequestCount();
+    int inFlightRequestCount();
 
     /**
-     * Get the total in-flight requests for a particular node
-     * 
-     * @param nodeId The id of the node
+     * 获取特定节点的所有正在运行的请求
+     * @param nodeId 节点的id
      */
-    public int inFlightRequestCount(String nodeId);
+    int inFlightRequestCount(String nodeId);
 
     /**
-     * Generate a request header for the next request
-     * 
-     * @param key The API key of the request
+     * 为下一个请求生成一个请求头
+     * @param key 请求的API键
      */
-    public RequestHeader nextRequestHeader(ApiKeys key);
+    RequestHeader nextRequestHeader(ApiKeys key);
 
     /**
-     * Generate a request header for the given API key
-     *
-     * @param key The api key
-     * @param version The api version
-     * @return A request header with the appropriate client id and correlation id
+     * 为给定的API密钥生成请求头
+     * @param key     API键
+     * @param version API版本
+     * @return 具有适当的客户端id和相关id的请求头
      */
-    public RequestHeader nextRequestHeader(ApiKeys key, short version);
+    RequestHeader nextRequestHeader(ApiKeys key, short version);
 
     /**
-     * Wake up the client if it is currently blocked waiting for I/O
+     * 如果当前正在等待I/O而被阻塞，则唤醒客户机
      */
-    public void wakeup();
+    void wakeup();
 
 }

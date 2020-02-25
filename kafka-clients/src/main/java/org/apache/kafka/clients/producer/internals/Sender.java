@@ -167,7 +167,6 @@ public class Sender implements Runnable {
         //遍历消息队列中所有的消息，找出对应的，已经ready的Node
         RecordAccumulator.ReadyCheckResult result = this.accumulator.ready(cluster, now);
 
-        // if there are any partitions whose leaders are not known yet, force metadata update
         if (result.unknownLeadersExist) {
             //如果一个ready的node都没有，请求更新metadata
             this.metadata.requestUpdate();

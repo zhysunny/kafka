@@ -20,7 +20,7 @@ import java.io.Serializable;
 
 /**
  * 主题名称和分区号
- * 这个实力仅表示一个topic下的一个分区
+ * 这个实例仅表示一个topic下的一个分区
  * @author 章云
  * @date 2020/1/17 9:06
  */

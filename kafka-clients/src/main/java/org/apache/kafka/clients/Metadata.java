@@ -37,7 +37,7 @@ public final class Metadata {
      */
     private final long refreshBackoffMs;
     /**
-     * 关键值：每隔多久，更新一次。缺省是600*1000，也就是10分种
+     * 关键值：每隔多久，更新一次。缺省是5 * 60 * 1000，也就是5分种
      */
     private final long metadataExpireMs;
     /**
@@ -91,7 +91,7 @@ public final class Metadata {
     }
 
     /**
-     * Get the current cluster info without blocking
+     * 获取当前集群信息而不阻塞
      */
     public synchronized Cluster fetch() {
         return this.cluster;
@@ -124,7 +124,7 @@ public final class Metadata {
     }
 
     /**
-     * Wait for metadata update until the current version is larger than the last version we know of
+     * 等待元数据更新，直到当前版本大于我们所知道的最新版本
      */
     public synchronized void awaitUpdate(final int lastVersion, final long maxWaitMs) throws InterruptedException {
         if (maxWaitMs < 0) {

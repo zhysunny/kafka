@@ -16,6 +16,12 @@
  */
 package org.apache.kafka.clients.producer.internals;
 
+import org.apache.kafka.common.MetricName;
+import org.apache.kafka.common.errors.TimeoutException;
+import org.apache.kafka.common.metrics.Metrics;
+import org.apache.kafka.common.metrics.Sensor;
+import org.apache.kafka.common.metrics.stats.Rate;
+import org.apache.kafka.common.utils.Time;
 import java.nio.ByteBuffer;
 import java.util.ArrayDeque;
 import java.util.Deque;
@@ -24,45 +30,53 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
-import org.apache.kafka.common.MetricName;
-import org.apache.kafka.common.errors.TimeoutException;
-import org.apache.kafka.common.metrics.Metrics;
-import org.apache.kafka.common.metrics.Sensor;
-import org.apache.kafka.common.metrics.stats.Rate;
-import org.apache.kafka.common.utils.Time;
-
-
 /**
- * A pool of ByteBuffers kept under a given memory limit. This class is fairly specific to the needs of the producer. In
- * particular it has the following properties:
- * <ol>
- * <li>There is a special "poolable size" and buffers of this size are kept in a free list and recycled
- * <li>It is fair. That is all memory is given to the longest waiting thread until it has sufficient memory. This
- * prevents starvation or deadlock when a thread asks for a large chunk of memory and needs to block until multiple
- * buffers are deallocated.
- * </ol>
+ * 保持在给定内存限制下的字节缓冲区池。
+ * <p>
+ * 该类相当特定于生产者的需要。
+ * <p>
+ * 特别是它具有以下性质:
+ * <p>
+ * 有一个特殊的“池大小”和缓冲区的大小保持在一个自由列表和回收
+ * <p>
+ * 这是公平的。也就是说，所有内存都分配给等待时间最长的线程，直到它有足够的内存。
+ * <p>
+ * 这可以防止在线程请求大量内存并且需要阻塞多个缓冲区才能释放时出现死锁。
+ * @author 章云
+ * @date 2020/2/3 9:36
  */
 public final class BufferPool {
 
+    /**
+     * 此缓冲池可分配的最大内存量，默认32M，配置项buffer.memory
+     */
     private final long totalMemory;
+    /**
+     * 可用内存大小
+     */
+    private long availableMemory;
+    /**
+     * 要在空闲列表中缓存而不是释放的缓冲区大小，默认16K，配置项batch.size
+     */
     private final int poolableSize;
     private final ReentrantLock lock;
     private final Deque<ByteBuffer> free;
     private final Deque<Condition> waiters;
-    private long availableMemory;
+    /**
+     * KafkaProducer中创建的实例
+     */
     private final Metrics metrics;
     private final Time time;
     private final Sensor waitTime;
 
     /**
      * Create a new buffer pool
-     *
-     * @param memory The maximum amount of memory that this buffer pool can allocate
-     * @param poolableSize The buffer size to cache in the free list rather than deallocating
-     * @param metrics instance of Metrics
-     * @param time time instance
+     * @param memory        The maximum amount of memory that this buffer pool can allocate
+     * @param poolableSize  The buffer size to cache in the free list rather than deallocating
+     * @param metrics       instance of Metrics
+     * @param time          time instance
      * @param metricGrpName logical group name for metrics
-     * @param metricTags additional key/val attributes for metrics
+     * @param metricTags    additional key/val attributes for metrics
      */
     public BufferPool(long memory, int poolableSize, Metrics metrics, Time time, String metricGrpName, Map<String, String> metricTags) {
         this.poolableSize = poolableSize;
@@ -75,29 +89,30 @@ public final class BufferPool {
         this.time = time;
         this.waitTime = this.metrics.sensor("bufferpool-wait-time");
         MetricName metricName = new MetricName("bufferpool-wait-ratio",
-                metricGrpName,
-                "The fraction of time an appender waits for space allocation.",
-                metricTags);
+        // producer-metrics
+        metricGrpName,
+        "The fraction of time an appender waits for space allocation.",
+        // client-id
+        metricTags);
         this.waitTime.add(metricName, new Rate(TimeUnit.NANOSECONDS));
     }
 
     /**
      * Allocate a buffer of the given size. This method blocks if there is not enough memory and the buffer pool
      * is configured with blocking mode.
-     *
-     * @param size The buffer size to allocate in bytes
+     * @param size           The buffer size to allocate in bytes
      * @param maxTimeToBlock The maximum time in milliseconds to block for buffer memory to be available
      * @return The buffer
-     * @throws InterruptedException If the thread is interrupted while blocked
+     * @throws InterruptedException     If the thread is interrupted while blocked
      * @throws IllegalArgumentException if size is larger than the total memory controlled by the pool (and hence we would block
-     *         forever)
+     *                                  forever)
      */
     public ByteBuffer allocate(int size, long maxTimeToBlock) throws InterruptedException {
         if (size > this.totalMemory) {
             throw new IllegalArgumentException("Attempt to allocate " + size
-                    + " bytes, but there is a hard limit of "
-                    + this.totalMemory
-                    + " on memory allocations.");
+            + " bytes, but there is a hard limit of "
+            + this.totalMemory
+            + " on memory allocations.");
         }
 
         this.lock.lock();
@@ -143,7 +158,7 @@ public final class BufferPool {
                         // we'll need to allocate memory, but we may only get
                         // part of what we need on this iteration
                         freeUp(size - accumulated);
-                        int got = (int) Math.min(size - accumulated, this.availableMemory);
+                        int got = (int)Math.min(size - accumulated, this.availableMemory);
                         this.availableMemory -= got;
                         accumulated += got;
                     }
@@ -192,10 +207,9 @@ public final class BufferPool {
     /**
      * Return buffers to the pool. If they are of the poolable size add them to the free list, otherwise just mark the
      * memory as free.
-     *
      * @param buffer The buffer to return
-     * @param size The size of the buffer to mark as deallocated, note that this maybe smaller than buffer.capacity
-     *             since the buffer may re-allocate itself during in-place compression
+     * @param size   The size of the buffer to mark as deallocated, note that this maybe smaller than buffer.capacity
+     *               since the buffer may re-allocate itself during in-place compression
      */
     public void deallocate(ByteBuffer buffer, int size) {
         lock.lock();
