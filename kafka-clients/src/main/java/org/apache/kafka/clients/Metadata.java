@@ -12,26 +12,21 @@
  */
 package org.apache.kafka.clients;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 import org.apache.kafka.common.Cluster;
 import org.apache.kafka.common.Node;
 import org.apache.kafka.common.PartitionInfo;
 import org.apache.kafka.common.errors.TimeoutException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import java.util.*;
 
 /**
- * A class encapsulating some of the logic around metadata.
- * <p>
- * This class is shared by the client thread (for partitioning) and the background sender thread.
- *
- * Metadata is maintained for only a subset of topics, which can be added to over time. When we request metadata for a
- * topic we don't have any metadata for it will trigger a metadata update.
+ * 封装了一些元数据逻辑的类。
+ * 这个类由客户端线程(用于分区)和后台发送方线程共享。
+ * 元数据只维护主题的一个子集，可以随着时间的推移添加到其中。
+ * 当我们为一个主题请求元数据时，我们没有任何元数据，这将触发元数据更新。
+ * @author 章云
+ * @date 2020/1/23 11:06
  */
 public final class Metadata {
 
@@ -79,9 +74,8 @@ public final class Metadata {
 
     /**
      * Create a new Metadata instance
-     * @param refreshBackoffMs The minimum amount of time that must expire between metadata refreshes to avoid busy
-     *        polling
-     * @param metadataExpireMs The maximum amount of time that metadata can be retained without refresh
+     * @param refreshBackoffMs 刷新元数据之间必须过期的最短时间，以避免繁忙的轮询
+     * @param metadataExpireMs 无需刷新即可保留元数据的最大时间量
      */
     public Metadata(long refreshBackoffMs, long metadataExpireMs) {
         this.refreshBackoffMs = refreshBackoffMs;
