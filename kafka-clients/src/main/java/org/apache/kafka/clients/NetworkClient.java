@@ -3,9 +3,9 @@
  * file distributed with this work for additional information regarding copyright ownership. The ASF licenses this file
  * to You under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the
  * License. You may obtain a copy of the License at
- *
+ * <p>
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
@@ -50,7 +50,7 @@ public class NetworkClient implements KafkaClient {
 
     /* the selector used to perform network i/o */
     private final Selectable selector;
-    
+
     private final MetadataUpdater metadataUpdater;
 
     private final Random randOffset;
@@ -75,45 +75,45 @@ public class NetworkClient implements KafkaClient {
 
     /* max time in ms for the producer to wait for acknowledgement from server*/
     private final int requestTimeoutMs;
-    
+
     private final Time time;
 
     public NetworkClient(Selectable selector,
-                         Metadata metadata,
-                         String clientId,
-                         int maxInFlightRequestsPerConnection,
-                         long reconnectBackoffMs,
-                         int socketSendBuffer,
-                         int socketReceiveBuffer,
-                         int requestTimeoutMs,
-                         Time time) {
+    Metadata metadata,
+    String clientId,
+    int maxInFlightRequestsPerConnection,
+    long reconnectBackoffMs,
+    int socketSendBuffer,
+    int socketReceiveBuffer,
+    int requestTimeoutMs,
+    Time time) {
         this(null, metadata, selector, clientId, maxInFlightRequestsPerConnection,
-                reconnectBackoffMs, socketSendBuffer, socketReceiveBuffer, requestTimeoutMs, time);
+        reconnectBackoffMs, socketSendBuffer, socketReceiveBuffer, requestTimeoutMs, time);
     }
 
     public NetworkClient(Selectable selector,
-                         MetadataUpdater metadataUpdater,
-                         String clientId,
-                         int maxInFlightRequestsPerConnection,
-                         long reconnectBackoffMs,
-                         int socketSendBuffer,
-                         int socketReceiveBuffer,
-                         int requestTimeoutMs,
-                         Time time) {
+    MetadataUpdater metadataUpdater,
+    String clientId,
+    int maxInFlightRequestsPerConnection,
+    long reconnectBackoffMs,
+    int socketSendBuffer,
+    int socketReceiveBuffer,
+    int requestTimeoutMs,
+    Time time) {
         this(metadataUpdater, null, selector, clientId, maxInFlightRequestsPerConnection, reconnectBackoffMs,
-                socketSendBuffer, socketReceiveBuffer, requestTimeoutMs, time);
+        socketSendBuffer, socketReceiveBuffer, requestTimeoutMs, time);
     }
 
     private NetworkClient(MetadataUpdater metadataUpdater,
-                          Metadata metadata,
-                          Selectable selector,
-                          String clientId,
-                          int maxInFlightRequestsPerConnection,
-                          long reconnectBackoffMs,
-                          int socketSendBuffer,
-                          int socketReceiveBuffer, 
-                          int requestTimeoutMs,
-                          Time time) {
+    Metadata metadata,
+    Selectable selector,
+    String clientId,
+    int maxInFlightRequestsPerConnection,
+    long reconnectBackoffMs,
+    int socketSendBuffer,
+    int socketReceiveBuffer,
+    int requestTimeoutMs,
+    Time time) {
 
         /* It would be better if we could pass `DefaultMetadataUpdater` from the public constructor, but it's not
          * possible because `DefaultMetadataUpdater` is an inner class and it can only be instantiated after the
@@ -140,8 +140,7 @@ public class NetworkClient implements KafkaClient {
     }
 
     /**
-     * Begin connecting to the given node, return true if we are already connected and ready to send to that node.
-     *
+     * 开始连接到给定的节点，如果我们已经连接并准备发送到该节点，则返回true。
      * @param node The node to check
      * @param now The current timestamp
      * @return True if we are ready to send to the given node
@@ -152,9 +151,8 @@ public class NetworkClient implements KafkaClient {
             return true;
         }
 
-        if (connectionStates.canConnect(node.idString(), now))
-            // if we are interested in sending to a node and we don't have a connection to it, initiate one
-        {
+        if (connectionStates.canConnect(node.idString(), now)) {
+            // 如果我们对发送到一个节点感兴趣，但是我们没有到它的连接，那么就初始化一个节点
             initiateConnect(node, now);
         }
 
@@ -372,7 +370,7 @@ public class NetworkClient implements KafkaClient {
                 found = node;
             }
         }
-        
+
         return found;
     }
 
@@ -447,7 +445,7 @@ public class NetworkClient implements KafkaClient {
             // Always expect the response version id to be the same as the request version id
             short apiKey = req.request().header().apiKey();
             short apiVer = req.request().header().apiVersion();
-            Struct body = (Struct) ProtoUtils.responseSchema(apiKey, apiVer).read(receive.payload());
+            Struct body = (Struct)ProtoUtils.responseSchema(apiKey, apiVer).read(receive.payload());
             correlate(req.request().header(), header);
             if (!metadataUpdater.maybeHandleCompletedReceive(req, now, body)) {
                 responses.add(new ClientResponse(req, now, false, body));
@@ -489,7 +487,7 @@ public class NetworkClient implements KafkaClient {
     private void correlate(RequestHeader requestHeader, ResponseHeader responseHeader) {
         if (requestHeader.correlationId() != responseHeader.correlationId()) {
             throw new IllegalStateException("Correlation id for response (" + responseHeader.correlationId()
-                    + ") does not match request (" + requestHeader.correlationId() + ")");
+            + ") does not match request (" + requestHeader.correlationId() + ")");
         }
     }
 
@@ -502,9 +500,9 @@ public class NetworkClient implements KafkaClient {
             log.debug("Initiating connection to node {} at {}:{}.", node.id(), node.host(), node.port());
             this.connectionStates.connecting(nodeConnectionId, now);
             selector.connect(nodeConnectionId,
-                             new InetSocketAddress(node.host(), node.port()),
-                             this.socketSendBuffer,
-                             this.socketReceiveBuffer);
+            new InetSocketAddress(node.host(), node.port()),
+            this.socketSendBuffer,
+            this.socketReceiveBuffer);
         } catch (IOException e) {
             /* attempt failed, we'll try again after the backoff */
             connectionStates.disconnected(nodeConnectionId, now);
@@ -550,8 +548,8 @@ public class NetworkClient implements KafkaClient {
             long waitForMetadataFetch = this.metadataFetchInProgress ? Integer.MAX_VALUE : 0;
             // if there is no node available to connect, back off refreshing metadata
             long metadataTimeout = Math.max(Math.max(timeToNextMetadataUpdate, timeToNextReconnectAttempt),
-                    waitForMetadataFetch);
- 
+            waitForMetadataFetch);
+
             if (metadataTimeout == 0) {
                 // Beware that the behavior of this method and the computation of timeouts for poll() are
                 // highly dependent on the behavior of leastLoadedNode.
