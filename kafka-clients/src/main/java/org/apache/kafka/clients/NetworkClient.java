@@ -20,23 +20,14 @@ import org.apache.kafka.common.network.Send;
 import org.apache.kafka.common.protocol.ApiKeys;
 import org.apache.kafka.common.protocol.ProtoUtils;
 import org.apache.kafka.common.protocol.types.Struct;
-import org.apache.kafka.common.requests.MetadataRequest;
-import org.apache.kafka.common.requests.MetadataResponse;
-import org.apache.kafka.common.requests.RequestHeader;
-import org.apache.kafka.common.requests.RequestSend;
-import org.apache.kafka.common.requests.ResponseHeader;
+import org.apache.kafka.common.requests.*;
 import org.apache.kafka.common.utils.Time;
 import org.apache.kafka.common.utils.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Random;
-import java.util.Set;
+import java.util.*;
 
 /**
  * A network client for asynchronous request/response network i/o. This is an internal class used to implement the
@@ -142,7 +133,7 @@ public class NetworkClient implements KafkaClient {
     /**
      * 开始连接到给定的节点，如果我们已经连接并准备发送到该节点，则返回true。
      * @param node The node to check
-     * @param now The current timestamp
+     * @param now  The current timestamp
      * @return True if we are ready to send to the given node
      */
     @Override
@@ -161,7 +152,6 @@ public class NetworkClient implements KafkaClient {
 
     /**
      * Closes the connection to a particular node (if there is one).
-     *
      * @param nodeId The id of the node
      */
     @Override
@@ -177,9 +167,8 @@ public class NetworkClient implements KafkaClient {
      * Returns the number of milliseconds to wait, based on the connection state, before attempting to send data. When
      * disconnected, this respects the reconnect backoff time. When connecting or connected, this handles slow/stalled
      * connections.
-     *
      * @param node The node to check
-     * @param now The current timestamp
+     * @param now  The current timestamp
      * @return The number of milliseconds to wait.
      */
     @Override
@@ -191,7 +180,6 @@ public class NetworkClient implements KafkaClient {
      * Check if the connection of the node has failed, based on the connection state. Such connection failure are
      * usually transient and can be resumed in the next {@link #ready(org.apache.kafka.common.Node, long)} }
      * call, but there are cases where transient failures needs to be caught and re-acted upon.
-     *
      * @param node the node to check
      * @return true iff the connection has failed and the node is disconnected
      */
@@ -202,9 +190,8 @@ public class NetworkClient implements KafkaClient {
 
     /**
      * Check if the node with the given id is ready to send more requests.
-     *
      * @param node The node
-     * @param now The current time in ms
+     * @param now  The current time in ms
      * @return true if the node is ready
      */
     @Override
@@ -216,7 +203,6 @@ public class NetworkClient implements KafkaClient {
 
     /**
      * Are we connected and ready and able to send more requests to the given connection?
-     *
      * @param node The node
      */
     private boolean canSendRequest(String node) {
@@ -225,9 +211,8 @@ public class NetworkClient implements KafkaClient {
 
     /**
      * Queue up the given request for sending. Requests can only be sent out to ready nodes.
-     *
      * @param request The request
-     * @param now The current timestamp
+     * @param now     The current timestamp
      */
     @Override
     public void send(ClientRequest request, long now) {
@@ -246,11 +231,10 @@ public class NetworkClient implements KafkaClient {
 
     /**
      * Do actual reads and writes to sockets.
-     *
      * @param timeout The maximum amount of time to wait (in ms) for responses if there are none immediately,
      *                must be non-negative. The actual timeout will be the minimum of timeout, request timeout and
      *                metadata timeout
-     * @param now The current time in milliseconds
+     * @param now     The current time in milliseconds
      * @return The list of responses received
      */
     @Override
@@ -305,7 +289,6 @@ public class NetworkClient implements KafkaClient {
 
     /**
      * Generate a request header for the given API key
-     *
      * @param key The api key
      * @return A request header with the appropriate client id and correlation id
      */
@@ -316,8 +299,7 @@ public class NetworkClient implements KafkaClient {
 
     /**
      * Generate a request header for the given API key and version
-     *
-     * @param key The api key
+     * @param key     The api key
      * @param version The api version
      * @return A request header with the appropriate client id and correlation id
      */
@@ -347,7 +329,6 @@ public class NetworkClient implements KafkaClient {
      * prefer a node with an existing connection, but will potentially choose a node for which we don't yet have a
      * connection if all existing connections are in use. This method will never choose a node for which there is no
      * existing connection and from which we have disconnected within the reconnect backoff period.
-     *
      * @return The node with the fewest in-flight requests.
      */
     @Override
@@ -376,10 +357,9 @@ public class NetworkClient implements KafkaClient {
 
     /**
      * Post process disconnection of a node
-     *
      * @param responses The list of responses to update
-     * @param nodeId Id of the node to be disconnected
-     * @param now The current time
+     * @param nodeId    Id of the node to be disconnected
+     * @param now       The current time
      */
     private void processDisconnection(List<ClientResponse> responses, String nodeId, long now) {
         connectionStates.disconnected(nodeId, now);
@@ -394,9 +374,8 @@ public class NetworkClient implements KafkaClient {
     /**
      * Iterate over all the inflight requests and expire any requests that have exceeded the configured the requestTimeout.
      * The connection to the node associated with the request will be terminated and will be treated as a disconnection.
-     *
      * @param responses The list of responses to update
-     * @param now The current time
+     * @param now       The current time
      */
     private void handleTimedOutRequests(List<ClientResponse> responses, long now) {
         List<String> nodeIds = this.inFlightRequests.getNodesWithTimedOutRequests(now, this.requestTimeoutMs);
@@ -416,9 +395,8 @@ public class NetworkClient implements KafkaClient {
 
     /**
      * Handle any completed request send. In particular if no response is expected consider the request complete.
-     *
      * @param responses The list of responses to update
-     * @param now The current time
+     * @param now       The current time
      */
     private void handleCompletedSends(List<ClientResponse> responses, long now) {
         // if no response is expected then when the send is completed, return it
@@ -433,9 +411,8 @@ public class NetworkClient implements KafkaClient {
 
     /**
      * Handle any completed receives and update the response list with the responses received.
-     *
      * @param responses The list of responses to update
-     * @param now The current time
+     * @param now       The current time
      */
     private void handleCompletedReceives(List<ClientResponse> responses, long now) {
         for (NetworkReceive receive : this.selector.completedReceives()) {
@@ -455,9 +432,8 @@ public class NetworkClient implements KafkaClient {
 
     /**
      * Handle any disconnected connections
-     *
      * @param responses The list of responses that completed with the disconnection
-     * @param now The current time
+     * @param now       The current time
      */
     private void handleDisconnections(List<ClientResponse> responses, long now) {
         for (String node : this.selector.disconnected()) {
@@ -515,13 +491,19 @@ public class NetworkClient implements KafkaClient {
 
     class DefaultMetadataUpdater implements MetadataUpdater {
 
-        /* the current cluster metadata */
+        /**
+         * 当前集群元数据
+         */
         private final Metadata metadata;
 
-        /* true iff there is a metadata request that has been sent and for which we have not yet received a response */
+        /**
+         * 如果已经发送了一个元数据请求，但我们还没有收到响应，则为true
+         */
         private boolean metadataFetchInProgress;
 
-        /* the last timestamp when no broker node is available to connect */
+        /**
+         * 没有代理节点可用时的最后时间戳
+         */
         private long lastNoNodeAvailableMs;
 
         DefaultMetadataUpdater(Metadata metadata) {
@@ -542,23 +524,20 @@ public class NetworkClient implements KafkaClient {
 
         @Override
         public long maybeUpdate(long now) {
-            // should we update our metadata?
+            // 下次更新metadata还剩多少时间
             long timeToNextMetadataUpdate = metadata.timeToNextUpdate(now);
+            // 下次尝试连接还剩多少时间
             long timeToNextReconnectAttempt = Math.max(this.lastNoNodeAvailableMs + metadata.refreshBackoff() - now, 0);
             long waitForMetadataFetch = this.metadataFetchInProgress ? Integer.MAX_VALUE : 0;
-            // if there is no node available to connect, back off refreshing metadata
-            long metadataTimeout = Math.max(Math.max(timeToNextMetadataUpdate, timeToNextReconnectAttempt),
-            waitForMetadataFetch);
-
+            // 如果没有可用的节点进行连接，则退出刷新元数据
+            long metadataTimeout = Math.max(Math.max(timeToNextMetadataUpdate, timeToNextReconnectAttempt), waitForMetadataFetch);
             if (metadataTimeout == 0) {
-                // Beware that the behavior of this method and the computation of timeouts for poll() are
-                // highly dependent on the behavior of leastLoadedNode.
-                //找到负载最小的Node
+                // 注意，此方法的行为和poll()超时的计算高度依赖于leastLoadedNode的行为。
+                // 找到负载最小的Node
                 Node node = leastLoadedNode(now);
-                //把更新Metadata的请求，发给这个Node
+                // 把更新Metadata的请求，发给这个Node
                 maybeUpdate(now, node);
             }
-
             return metadataTimeout;
         }
 
@@ -632,7 +611,7 @@ public class NetworkClient implements KafkaClient {
             String nodeConnectionId = node.idString();
 
             if (canSendRequest(nodeConnectionId)) {
-                Set<String> topics = metadata.needMetadataForAllTopics() ? new HashSet<String>() : metadata.topics();
+                Set<String> topics = metadata.needMetadataForAllTopics() ? new HashSet<>() : metadata.topics();
                 this.metadataFetchInProgress = true;
                 //关键点：发送更新Metadata的Request
                 ClientRequest metadataRequest = request(now, nodeConnectionId, topics);

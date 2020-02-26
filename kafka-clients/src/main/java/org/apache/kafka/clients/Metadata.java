@@ -105,9 +105,8 @@ public final class Metadata {
     }
 
     /**
-     * The next time to update the cluster info is the maximum of the time the current info will expire and the time the
-     * current info can be updated (i.e. backoff time has elapsed); If an update has been request then the expiry time
-     * is now
+     * 下一次更新集群信息的时间是当前信息过期和当前信息可以更新的时间的最大值(即已经过了回退时间);
+     * 如果已请求更新，则过期时间为现在
      */
     public synchronized long timeToNextUpdate(long nowMs) {
         long timeToExpire = needUpdate ? 0 : Math.max(this.lastSuccessfulRefreshMs + this.metadataExpireMs - nowMs, 0);

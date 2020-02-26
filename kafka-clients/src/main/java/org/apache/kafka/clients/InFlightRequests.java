@@ -3,29 +3,26 @@
  * file distributed with this work for additional information regarding copyright ownership. The ASF licenses this file
  * to You under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the
  * License. You may obtain a copy of the License at
- * 
+ * <p>
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ * <p>
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
 package org.apache.kafka.clients;
 
-import java.util.ArrayDeque;
-import java.util.Collections;
-import java.util.Deque;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
- * The set of requests which have been sent or are being sent but haven't yet received a response
+ * 已发送或正在发送但尚未收到响应的请求集
  */
 final class InFlightRequests {
 
     private final int maxInFlightRequestsPerConnection;
+    /**
+     * key是nodeId
+     */
     private final Map<String, Deque<ClientRequest>> requests = new HashMap<String, Deque<ClientRequest>>();
 
     public InFlightRequests(int maxInFlightRequestsPerConnection) {
@@ -81,14 +78,14 @@ final class InFlightRequests {
 
     /**
      * Can we send more requests to this node?
-     * 
+     *
      * @param node Node in question
      * @return true iff we have no requests still being sent to the given node
      */
     public boolean canSendMore(String node) {
         Deque<ClientRequest> queue = requests.get(node);
         return queue == null || queue.isEmpty() ||
-               (queue.peekFirst().request().completed() && queue.size() < this.maxInFlightRequestsPerConnection);
+        (queue.peekFirst().request().completed() && queue.size() < this.maxInFlightRequestsPerConnection);
     }
 
     /**
@@ -114,7 +111,7 @@ final class InFlightRequests {
 
     /**
      * Clear out all the in-flight requests for the given node and return them
-     * 
+     *
      * @param node The node
      * @return All the in-flight requests for that node that have been removed
      */
@@ -128,8 +125,7 @@ final class InFlightRequests {
     }
 
     /**
-     * Returns a list of nodes with pending inflight request, that need to be timed out
-     *
+     * 返回超时请求的节点
      * @param now current time in milliseconds
      * @param requestTimeout max time to wait for the request to be completed
      * @return list of nodes
@@ -145,7 +141,7 @@ final class InFlightRequests {
                 }
             }
         }
-
         return nodeIds;
     }
+
 }
