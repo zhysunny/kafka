@@ -13,23 +13,37 @@
 package org.apache.kafka.clients.consumer.internals;
 
 /**
- * A helper class for managing the heartbeat to the coordinator
+ * 用于将心跳管理到协调器的助手类
+ * @author 章云
+ * @date 2020/2/26 13:36
  */
 public final class Heartbeat {
-    private final long timeout;
-    private final long interval;
 
+    /**
+     * 超时时间,session.timeout.ms  default=30*1000
+     */
+    private final long timeout;
+    /**
+     * 心跳间隔时间,heartbeat.interval.ms  default=3*1000
+     */
+    private final long interval;
+    /**
+     * 最后一次心跳发送时间戳
+     */
     private long lastHeartbeatSend;
+    /**
+     * 最后一次心跳接收时间戳
+     */
     private long lastHeartbeatReceive;
+    /**
+     * 超时时间开始计算的时间
+     */
     private long lastSessionReset;
 
-    public Heartbeat(long timeout,
-                     long interval,
-                     long now) {
+    public Heartbeat(long timeout, long interval, long now) {
         if (interval >= timeout) {
             throw new IllegalArgumentException("Heartbeat must be set lower than the session timeout");
         }
-
         this.timeout = timeout;
         this.interval = interval;
         this.lastSessionReset = now;

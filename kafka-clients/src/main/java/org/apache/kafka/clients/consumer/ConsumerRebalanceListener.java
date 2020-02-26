@@ -3,18 +3,17 @@
  * file distributed with this work for additional information regarding copyright ownership. The ASF licenses this file
  * to You under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the
  * License. You may obtain a copy of the License at
- * 
+ * <p>
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ * <p>
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
 package org.apache.kafka.clients.consumer;
 
-import java.util.Collection;
-
 import org.apache.kafka.common.TopicPartition;
+import java.util.Collection;
 
 /**
  * A callback interface that the user can implement to trigger custom actions when the set of partitions assigned to the
@@ -75,18 +74,16 @@ import org.apache.kafka.common.TopicPartition;
 public interface ConsumerRebalanceListener {
 
     /**
-     * A callback method the user can implement to provide handling of offset commits to a customized store on the start
-     * of a rebalance operation. This method will be called before a rebalance operation starts and after the consumer
-     * stops fetching data. It is recommended that offsets should be committed in this callback to either Kafka or a
-     * custom offset store to prevent duplicate data.
+     * 用户可以实现的回调方法，用于在重新平衡操作开始时提供对自定义存储的偏移提交的处理。
+     * 此方法将在重新平衡操作开始之前和使用者停止获取数据之后调用。
+     * 建议在此回调中将偏移量提交到Kafka或自定义偏移存储，以防止重复数据。
      * <p>
-     * For examples on usage of this API, see Usage Examples section of {@link KafkaConsumer KafkaConsumer}
+     * 有关此API用法的示例，请参见{@link KafkaConsumer KafkaConsumer}的用法示例部分。
      * <p>
-     * <b>NOTE:</b> This method is only called before rebalances. It is not called prior to {@link KafkaConsumer#close()}.
-     *
-     * @param partitions The list of partitions that were assigned to the consumer on the last rebalance
+     * 注:此方法仅在重新平衡前调用。它不是在{@link KafkaConsumer#close()}之前调用的。
+     * @param partitions 上次重新平衡时分配给使用者的分区列表
      */
-    public void onPartitionsRevoked(Collection<TopicPartition> partitions);
+    void onPartitionsRevoked(Collection<TopicPartition> partitions);
 
     /**
      * A callback method the user can implement to provide handling of customized offsets on completion of a successful
@@ -96,9 +93,9 @@ public interface ConsumerRebalanceListener {
      * It is guaranteed that all the processes in a consumer group will execute their
      * {@link #onPartitionsRevoked(Collection)} callback before any instance executes its
      * {@link #onPartitionsAssigned(Collection)} callback.
-     *
      * @param partitions The list of partitions that are now assigned to the consumer (may include partitions previously
-     *            assigned to the consumer)
+     *                   assigned to the consumer)
      */
-    public void onPartitionsAssigned(Collection<TopicPartition> partitions);
+    void onPartitionsAssigned(Collection<TopicPartition> partitions);
+
 }

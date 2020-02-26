@@ -112,22 +112,6 @@ public final class ConsumerCoordinator extends AbstractCoordinator {
         this.sensors = new ConsumerCoordinatorMetrics(metrics, metricGrpPrefix, metricTags);
     }
 
-    @Override
-    public String protocolType() {
-        return ConsumerProtocol.PROTOCOL_TYPE;
-    }
-
-    @Override
-    public List<ProtocolMetadata> metadata() {
-        List<ProtocolMetadata> metadataList = new ArrayList<>();
-        for (PartitionAssignor assignor : assignors) {
-            Subscription subscription = assignor.subscription(subscriptions.subscription());
-            ByteBuffer metadata = ConsumerProtocol.serializeSubscription(subscription);
-            metadataList.add(new ProtocolMetadata(assignor.name(), metadata));
-        }
-        return metadataList;
-    }
-
     private void addMetadataListener() {
         this.metadata.addListener(new Metadata.Listener() {
             @Override
@@ -156,6 +140,43 @@ public final class ConsumerCoordinator extends AbstractCoordinator {
                 }
             }
         });
+    }
+
+    @Override
+    public String protocolType() {
+        return ConsumerProtocol.PROTOCOL_TYPE;
+    }
+
+    @Override
+    public List<ProtocolMetadata> metadata() {
+        List<ProtocolMetadata> metadataList = new ArrayList<>();
+        for (PartitionAssignor assignor : assignors) {
+            Subscription subscription = assignor.subscription(subscriptions.subscription());
+            ByteBuffer metadata = ConsumerProtocol.serializeSubscription(subscription);
+            metadataList.add(new ProtocolMetadata(assignor.name(), metadata));
+        }
+        return metadataList;
+    }
+
+    @Override
+    protected void onJoinPrepare(int generation, String memberId) {
+        // 如果启用了自动提交，则在重新平衡之前提交偏移量
+        maybeAutoCommitOffsetsSync();
+
+        // 在重新平衡之前执行用户的回调
+        ConsumerRebalanceListener listener = subscriptions.listener();
+        log.debug("Revoking previously assigned partitions {}", subscriptions.assignedPartitions());
+        try {
+            Set<TopicPartition> revoked = new HashSet<>(subscriptions.assignedPartitions());
+            listener.onPartitionsRevoked(revoked);
+        } catch (WakeupException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("User provided listener " + listener.getClass().getName()
+            + " failed on partition revocation: ", e);
+        }
+
+        subscriptions.needReassignment();
     }
 
     private PartitionAssignor lookupAssignor(String name) {
@@ -246,27 +267,6 @@ public final class ConsumerCoordinator extends AbstractCoordinator {
     }
 
     @Override
-    protected void onJoinPrepare(int generation, String memberId) {
-        // commit offsets prior to rebalance if auto-commit enabled
-        maybeAutoCommitOffsetsSync();
-
-        // execute the user's callback before rebalance
-        ConsumerRebalanceListener listener = subscriptions.listener();
-        log.debug("Revoking previously assigned partitions {}", subscriptions.assignedPartitions());
-        try {
-            Set<TopicPartition> revoked = new HashSet<>(subscriptions.assignedPartitions());
-            listener.onPartitionsRevoked(revoked);
-        } catch (WakeupException e) {
-            throw e;
-        } catch (Exception e) {
-            log.error("User provided listener " + listener.getClass().getName()
-                    + " failed on partition revocation: ", e);
-        }
-
-        subscriptions.needReassignment();
-    }
-
-    @Override
     public boolean needRejoin() {
         return subscriptions.partitionsAutoAssigned() &&
                 (super.needRejoin() || subscriptions.partitionAssignmentNeeded());
@@ -315,7 +315,7 @@ public final class ConsumerCoordinator extends AbstractCoordinator {
     }
 
     /**
-     * Ensure that we have a valid partition assignment from the coordinator.
+     * 确保我们有来自协调器的有效分区分配。
      */
     public void ensurePartitionAssignment() {
         if (subscriptions.partitionsAutoAssigned()) {
