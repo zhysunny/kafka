@@ -18,12 +18,7 @@ package org.apache.kafka.clients.consumer;
 
 import org.apache.kafka.clients.consumer.internals.AbstractPartitionAssignor;
 import org.apache.kafka.common.TopicPartition;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * The range assignor works on a per-topic basis. For each topic, we lay out the available partitions in numeric order
@@ -59,6 +54,10 @@ public class RangeAssignor extends AbstractPartitionAssignor {
         return partitions;
     }
 
+    /**
+     * @param consumerMetadata Map<consumerId, List<topic>>
+     * @return Map<topic   ,       List   <   consumerId>>
+     */
     private Map<String, List<String>> consumersPerTopic(Map<String, List<String>> consumerMetadata) {
         Map<String, List<String>> res = new HashMap<>();
         for (Map.Entry<String, List<String>> subscriptionEntry : consumerMetadata.entrySet()) {
@@ -70,9 +69,16 @@ public class RangeAssignor extends AbstractPartitionAssignor {
         return res;
     }
 
+    /**
+     * @param partitionsPerTopic Map<topic, partitions>
+     * @param subscriptions      Map<consumerId, List<topic>>
+     * @return
+     */
     @Override
     public Map<String, List<TopicPartition>> assign(Map<String, Integer> partitionsPerTopic, Map<String, List<String>> subscriptions) {
+        // Map<topic, List<consumerId>>
         Map<String, List<String>> consumersPerTopic = consumersPerTopic(subscriptions);
+        // Map<consumerId, List<TopicPartition>>
         Map<String, List<TopicPartition>> assignment = new HashMap<>();
         for (String memberId : subscriptions.keySet()) {
             assignment.put(memberId, new ArrayList<>());
@@ -88,8 +94,9 @@ public class RangeAssignor extends AbstractPartitionAssignor {
             }
 
             Collections.sort(consumersForTopic);
-
+            // 每个消费者分到的分区数
             int numPartitionsPerConsumer = numPartitionsForTopic / consumersForTopic.size();
+            // 余数
             int consumersWithExtraPartition = numPartitionsForTopic % consumersForTopic.size();
 
             List<TopicPartition> partitions = partitions(topic, numPartitionsForTopic);
