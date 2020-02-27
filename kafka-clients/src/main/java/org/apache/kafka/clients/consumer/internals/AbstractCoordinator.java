@@ -456,9 +456,9 @@ public abstract class AbstractCoordinator implements Closeable {
     }
 
     /**
-     * Discover the current coordinator for the group. Sends a GroupMetadata request to
-     * one of the brokers. The returned future should be polled to get the result of the request.
-     * @return A request future which indicates the completion of the metadata request
+     * 发现组的当前协调器。向其中一个代理发送GroupMetadata请求。
+     * 应该轮询返回的future以获得请求的结果。
+     * @return 一个请求将来，它指示元数据请求的完成
      */
     private RequestFuture<Void> sendGroupMetadataRequest() {
         // initiate the group metadata request

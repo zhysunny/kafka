@@ -905,6 +905,7 @@ public class KafkaConsumer<K, V> implements Consumer<K, V> {
      */
     private Map<TopicPartition, List<ConsumerRecord<K, V>>> pollOnce(long timeout) {
         // TODO: Sub-requests should take into account the poll timeout (KAFKA-1894)
+        // 识别服务端的协调器，确定存在即可
         coordinator.ensureCoordinatorKnown();
 
         // 如果我们希望的话，确保分配了分区
@@ -1317,7 +1318,7 @@ public class KafkaConsumer<K, V> implements Consumer<K, V> {
      *                                       defined
      */
     private void updateFetchPositions(Set<TopicPartition> partitions) {
-        // refresh commits for all assigned partitions
+        // 对所有分配的分区进行刷新提交
         coordinator.refreshCommittedOffsetsIfNeeded();
 
         // then do any offset lookups in case some positions are not known
