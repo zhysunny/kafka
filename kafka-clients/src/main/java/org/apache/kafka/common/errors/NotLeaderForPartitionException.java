@@ -13,7 +13,7 @@
 package org.apache.kafka.common.errors;
 
 /**
- * This server is not the leader for the given partition
+ * 该服务不是给定分区的Leader
  */
 public class NotLeaderForPartitionException extends InvalidMetadataException {
 

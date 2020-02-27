@@ -15,7 +15,7 @@ package org.apache.kafka.clients.consumer.internals;
 import org.apache.kafka.common.errors.InvalidMetadataException;
 
 /**
- * No brokers were available to complete a request.
+ * 没有broker可以完成请求。
  */
 public class NoAvailableBrokersException extends InvalidMetadataException {
     private static final long serialVersionUID = 1L;

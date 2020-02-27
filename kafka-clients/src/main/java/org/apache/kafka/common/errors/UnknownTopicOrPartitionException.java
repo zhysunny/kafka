@@ -13,7 +13,7 @@
 package org.apache.kafka.common.errors;
 
 /**
- * This topic/partition doesn't exist
+ * 这个主题/分区不存在
  */
 public class UnknownTopicOrPartitionException extends InvalidMetadataException {
 

@@ -13,7 +13,7 @@
 package org.apache.kafka.common.errors;
 
 /**
- * The client has tried to save its offset with associated metadata larger than the maximum size allowed by the server.
+ * 客户端尝试使用大于服务器允许的最大大小的关联元数据来保存其偏移量。
  */
 public class OffsetMetadataTooLarge extends ApiException {
 

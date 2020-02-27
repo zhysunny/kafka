@@ -13,8 +13,7 @@
 package org.apache.kafka.common.errors;
 
 /**
- * This exception indicates a record has failed its internal CRC check, this generally indicates network or disk
- * corruption.
+ * 此异常表示记录的内部CRC检查失败，这通常表示网络或磁盘损坏。
  */
 public class CorruptRecordException extends RetriableException {
 

@@ -19,7 +19,7 @@ package org.apache.kafka.common.config;
 import org.apache.kafka.common.KafkaException;
 
 /**
- * Thrown if the user supplies an invalid configuration
+ * 如果用户提供了无效的配置，则抛出
  */
 public class ConfigException extends KafkaException {
 

@@ -17,7 +17,7 @@ import org.apache.kafka.common.TopicPartition;
 import java.util.Map;
 
 /**
- * This record is larger than the maximum allowable size
+ * 此记录大于最大允许大小
  */
 public class RecordTooLargeException extends ApiException {
 

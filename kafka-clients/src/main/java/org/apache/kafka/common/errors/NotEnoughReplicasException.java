@@ -17,7 +17,7 @@
 package org.apache.kafka.common.errors;
 
 /**
- * Number of insync replicas for the partition is lower than min.insync.replicas
+ * 分区的insync副本的数量低于min.insync.replicas
  */
 public class NotEnoughReplicasException extends RetriableException {
     private static final long serialVersionUID = 1L;

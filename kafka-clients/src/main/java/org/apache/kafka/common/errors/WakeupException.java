@@ -15,10 +15,8 @@ package org.apache.kafka.common.errors;
 import org.apache.kafka.common.KafkaException;
 
 /**
- * Exception used to indicate preemption of a blocking operation by an external thread.
- * For example, {@link org.apache.kafka.clients.consumer.KafkaConsumer#wakeup}
- * can be used to break out of an active {@link org.apache.kafka.clients.consumer.KafkaConsumer#poll(long)},
- * which would raise an instance of this exception.
+ * 异常，用于指示外部线程抢占阻塞操作。
+ * 例如，{@link org.apache.kafka.clients.consumer。可以使用KafkaConsumer#wakeup}从活动的{@link org.apache.kafka.clients.consumer.KafkaConsumer#poll(long)}中跳出，该活动将引发此异常的实例。
  */
 public class WakeupException extends KafkaException {
     private static final long serialVersionUID = 1L;

@@ -14,8 +14,7 @@
 package org.apache.kafka.common.errors;
 
 /**
- * The broker returns this error code if it receives an offset fetch or commit request for a consumer group that it is
- * not a coordinator for.
+ * 如果broker接收到它不是协调器的使用者组的偏移获取或提交请求，则它将返回此错误代码。
  */
 public class NotCoordinatorForGroupException extends RetriableException {
 

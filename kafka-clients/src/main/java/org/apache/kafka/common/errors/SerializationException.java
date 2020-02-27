@@ -15,7 +15,7 @@ package org.apache.kafka.common.errors;
 import org.apache.kafka.common.KafkaException;
 
 /**
- *  Any exception during serialization in the producer
+ *  在生成器中序列化期间的任何异常
  */
 public class SerializationException extends KafkaException {
 

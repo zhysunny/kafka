@@ -55,8 +55,9 @@ public class RangeAssignor extends AbstractPartitionAssignor {
     }
 
     /**
+     * 返回Map<topic, List<consumerId>>
      * @param consumerMetadata Map<consumerId, List<topic>>
-     * @return Map<topic   ,       List   <   consumerId>>
+     * @return
      */
     private Map<String, List<String>> consumersPerTopic(Map<String, List<String>> consumerMetadata) {
         Map<String, List<String>> res = new HashMap<>();

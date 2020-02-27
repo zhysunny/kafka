@@ -13,7 +13,7 @@
 package org.apache.kafka.common.errors;
 
 /**
- * The client has attempted to perform an operation on an invalid topic.
+ * 客户端试图对无效的主题执行操作。
  */
 public class InvalidTopicException extends ApiException {
 

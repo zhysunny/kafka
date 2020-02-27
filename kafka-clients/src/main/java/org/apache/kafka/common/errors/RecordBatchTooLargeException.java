@@ -13,7 +13,7 @@
 package org.apache.kafka.common.errors;
 
 /**
- * This record batch is larger than the maximum allowable size
+ * 此记录批处理大于最大允许大小
  */
 public class RecordBatchTooLargeException extends ApiException {
 

@@ -19,8 +19,9 @@ import java.util.Collections;
 import java.util.Set;
 
 /**
- * Indicates that there is no stored offset for a partition and no defined offset
- * reset policy.
+ * 指示没有为分区存储偏移量，也没有定义偏移量重置策略。
+ * @author 章云
+ * @date 2020/2/27 8:49
  */
 public class NoOffsetForPartitionException extends InvalidOffsetException {
 

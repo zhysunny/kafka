@@ -14,8 +14,7 @@
 package org.apache.kafka.common.errors;
 
 /**
- * The broker returns this error code for consumer metadata requests or offset commit requests if the offsets topic has
- * not yet been created.
+ * 如果还没有创建偏移主题，broker将返回消费者元数据请求或偏移提交请求的错误代码。
  */
 public class GroupCoordinatorNotAvailableException extends RetriableException {
 

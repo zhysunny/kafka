@@ -13,9 +13,8 @@
 package org.apache.kafka.common.errors;
 
 /**
- * An error occurred on the server for which the client doesn't have a corresponding error code. This is generally an
- * unexpected error.
- * 
+ * 服务器上发生错误，客户端没有相应的错误代码。
+ * 这通常是一个意外错误。
  */
 public class UnknownServerException extends ApiException {
 

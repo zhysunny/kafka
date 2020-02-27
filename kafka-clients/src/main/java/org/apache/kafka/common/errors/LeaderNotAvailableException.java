@@ -13,8 +13,7 @@
 package org.apache.kafka.common.errors;
 
 /**
- * There is no currently available leader for the given partition (either because a leadership election is in progress
- * or because all replicas are down).
+ * 对于给定的分区，当前没有可用的leader(可能是因为正在进行领导选举，也可能是因为所有副本都已关闭)。
  */
 public class LeaderNotAvailableException extends InvalidMetadataException {
 

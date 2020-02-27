@@ -15,7 +15,7 @@ package org.apache.kafka.common.errors;
 import org.apache.kafka.common.KafkaException;
 
 /**
- * An unchecked wrapper for InterruptedException
+ * 一个未选中的InterruptedException包装器
  */
 public class InterruptException extends KafkaException {
 

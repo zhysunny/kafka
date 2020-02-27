@@ -14,8 +14,7 @@
 package org.apache.kafka.common.errors;
 
 /**
- * The broker returns this error code for any coordiantor request if it is still loading the metadata (after a leader change
- * for that offsets topic partition) for this group.
+ * broker为任何coordiantor请求返回这个错误代码，如果它仍然为这个组加载元数据(在该偏移主题分区的leader更改之后)。
  */
 public class GroupLoadInProgressException extends RetriableException {
 

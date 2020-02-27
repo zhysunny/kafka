@@ -13,7 +13,7 @@
 package org.apache.kafka.common.errors;
 
 /**
- * Indicates that a request timed out.
+ * 指示请求超时。
  */
 public class TimeoutException extends RetriableException {
 

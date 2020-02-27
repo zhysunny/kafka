@@ -15,9 +15,8 @@ package org.apache.kafka.clients.consumer.internals;
 import org.apache.kafka.common.errors.RetriableException;
 
 /**
- * Exception used in {@link ConsumerNetworkClient} to indicate the failure
- * to transmit a request to the networking layer. This could be either because
- * the client is still connecting to the given host or its send buffer is full.
+ * {@link ConsumerNetworkClient}中使用的异常，指示向网络层传输请求失败。
+ * 这可能是因为客户机仍然连接到给定的主机，或者是因为它的发送缓冲区已满。
  */
 public class SendFailedException extends RetriableException {
     public static final SendFailedException INSTANCE = new SendFailedException();

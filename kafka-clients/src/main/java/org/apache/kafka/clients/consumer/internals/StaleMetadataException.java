@@ -15,7 +15,7 @@ package org.apache.kafka.clients.consumer.internals;
 import org.apache.kafka.common.errors.InvalidMetadataException;
 
 /**
- * Thrown when metadata is old and needs to be refreshed.
+ * 当元数据过时并需要刷新时抛出。
  */
 public class StaleMetadataException extends InvalidMetadataException {
     private static final long serialVersionUID = 1L;
